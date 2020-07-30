@@ -19,6 +19,8 @@ import (
 
 	"github.com/prometheus/prometheus/prompb"
 
+	"go.opentelemetry.io/collector/internal/data"
+
 	commonpb "go.opentelemetry.io/collector/internal/data/opentelemetry-proto-gen/common/v1"
 	otlp "go.opentelemetry.io/collector/internal/data/opentelemetry-proto-gen/metrics/v1"
 )
@@ -29,14 +31,18 @@ type combination struct {
 }
 
 var (
-	time1   = uint64(time.Now().UnixNano())
-	time2   = uint64(time.Date(1970, 1, 0, 0, 0, 0, 0, time.UTC).UnixNano())
-	msTime1 = int64(time1 / uint64(int64(time.Millisecond)/int64(time.Nanosecond)))
-	msTime2 = int64(time2 / uint64(int64(time.Millisecond)/int64(time.Nanosecond)))
 
-	typeInt64 = "INT64"
+	time1       = uint64(time.Now().UnixNano())
+	time2       = uint64(time.Date(1970, 1, 0, 0, 0, 0, 0, time.UTC).UnixNano())
+	msTime1     = int64(time1 / uint64(int64(time.Millisecond)/int64(time.Nanosecond)))
+	msTime2     = int64(time2 / uint64(int64(time.Millisecond)/int64(time.Nanosecond)))
+	testHeaders = map[string]string{"headerOne": "value1"}
 
-	typeHistogram = "HISTOGRAM"
+	typeInt64           = "INT64"
+	typeMonotonicInt64  = "MONOTONIC_INT64"
+	typeMonotonicDouble = "MONOTONIC_DOUBLE"
+	typeHistogram       = "HISTOGRAM"
+	typeSummary         = "SUMMARY"
 
 	label11 = "test_label11"
 	value11 = "test_value11"
@@ -53,10 +59,14 @@ var (
 	dirty1  = "%"
 	dirty2  = "?"
 
-	intVal1 int64 = 1
-	intVal2 int64 = 2
+
+	intVal1   int64 = 1
+	intVal2   int64 = 2
+	floatVal1       = 1.0
+	floatVal2       = 2.0
 
 	lbs1      = getLabels(label11, value11, label12, value12)
+	lbs2      = getLabels(label21, value21, label22, value22)
 	lbs1Dirty = getLabels(label11+dirty1, value11, dirty2+label12, value12)
 
 	promLbs1 = getPromLabels(label11, value11, label12, value12)
@@ -67,10 +77,12 @@ var (
 	ns1    = "test_ns"
 	name1  = "valid_single_int_point"
 
-	monotonicInt64Comb = 0
-	histogramComb      = 2
-	summaryComb        = 3
-	validCombinations  = []combination{
+
+	monotonicInt64Comb  = 0
+	monotonicDoubleComb = 1
+	histogramComb       = 2
+	summaryComb         = 3
+	validCombinations   = []combination{
 		{otlp.MetricDescriptor_MONOTONIC_INT64, otlp.MetricDescriptor_CUMULATIVE},
 		{otlp.MetricDescriptor_MONOTONIC_DOUBLE, otlp.MetricDescriptor_CUMULATIVE},
 		{otlp.MetricDescriptor_HISTOGRAM, otlp.MetricDescriptor_CUMULATIVE},
@@ -131,10 +143,65 @@ func getDescriptor(name string, i int, comb []combination) *otlp.MetricDescripto
 	}
 }
 
+func getIntDataPoint(labels []*commonpb.StringKeyValue, value int64, ts uint64) *otlp.Int64DataPoint {
+	return &otlp.Int64DataPoint{
+		Labels:            labels,
+		StartTimeUnixNano: 0,
+		TimeUnixNano:      ts,
+		Value:             value,
+	}
+}
+
+func getDoubleDataPoint(labels []*commonpb.StringKeyValue, value float64, ts uint64) *otlp.DoubleDataPoint {
+	return &otlp.DoubleDataPoint{
+		Labels:            labels,
+		StartTimeUnixNano: 0,
+		TimeUnixNano:      ts,
+		Value:             value,
+	}
+}
+
+func getHistogramDataPoint(labels []*commonpb.StringKeyValue, ts uint64, sum float64, count uint64, bounds []float64, buckets []uint64) *otlp.HistogramDataPoint {
+	bks := []*otlp.HistogramDataPoint_Bucket{}
+	for _, c := range buckets {
+		bks = append(bks, &otlp.HistogramDataPoint_Bucket{
+			Count:    c,
+			Exemplar: nil,
+		})
+	}
+	return &otlp.HistogramDataPoint{
+		Labels:            labels,
+		StartTimeUnixNano: 0,
+		TimeUnixNano:      ts,
+		Count:             count,
+		Sum:               sum,
+		Buckets:           bks,
+		ExplicitBounds:    bounds,
+	}
+}
+
+func getSummaryDataPoint(labels []*commonpb.StringKeyValue, ts uint64, sum float64, count uint64, pcts []float64, values []float64) *otlp.SummaryDataPoint {
+	pcs := []*otlp.SummaryDataPoint_ValueAtPercentile{}
+	for i, v := range values {
+		pcs = append(pcs, &otlp.SummaryDataPoint_ValueAtPercentile{
+			Percentile: pcts[i],
+			Value:      v,
+		})
+	}
+	return &otlp.SummaryDataPoint{
+		Labels:            labels,
+		StartTimeUnixNano: 0,
+		TimeUnixNano:      ts,
+		Count:             count,
+		Sum:               sum,
+		PercentileValues:  pcs,
+	}
+}
+
 // Prometheus TimeSeries
 func getPromLabels(lbs ...string) []prompb.Label {
 	pbLbs := prompb.Labels{
-		Labels: []prompb.Label{},
+		Labels:               []prompb.Label{},
 	}
 	for i := 0; i < len(lbs); i += 2 {
 		pbLbs.Labels = append(pbLbs.Labels, getLabel(lbs[i], lbs[i+1]))
@@ -160,5 +227,53 @@ func getTimeSeries(labels []prompb.Label, samples ...prompb.Sample) *prompb.Time
 	return &prompb.TimeSeries{
 		Labels:  labels,
 		Samples: samples,
+	}
+}
+
+func setCumulative(metricsData *data.MetricData) {
+	for _, r := range data.MetricDataToOtlp(*metricsData) {
+		for _, instMetrics := range r.InstrumentationLibraryMetrics {
+			for _, m := range instMetrics.Metrics {
+				m.MetricDescriptor.Temporality = otlp.MetricDescriptor_CUMULATIVE
+			}
+		}
+	}
+}
+
+func setDataPointToNil(metricsData *data.MetricData, dataField string) {
+	for _, r := range data.MetricDataToOtlp(*metricsData) {
+		for _, instMetrics := range r.InstrumentationLibraryMetrics {
+			for _, m := range instMetrics.Metrics {
+				switch dataField {
+				case typeMonotonicInt64:
+					m.Int64DataPoints = nil
+				case typeMonotonicDouble:
+					m.DoubleDataPoints = nil
+				case typeHistogram:
+					m.HistogramDataPoints = nil
+				case typeSummary:
+					m.SummaryDataPoints = nil
+				}
+			}
+		}
+	}
+}
+
+func setType(metricsData *data.MetricData, dataField string) {
+	for _, r := range data.MetricDataToOtlp(*metricsData) {
+		for _, instMetrics := range r.InstrumentationLibraryMetrics {
+			for _, m := range instMetrics.Metrics {
+				switch dataField {
+				case typeMonotonicInt64:
+					m.GetMetricDescriptor().Type = otlp.MetricDescriptor_MONOTONIC_INT64
+				case typeMonotonicDouble:
+					m.GetMetricDescriptor().Type = otlp.MetricDescriptor_MONOTONIC_DOUBLE
+				case typeHistogram:
+					m.GetMetricDescriptor().Type = otlp.MetricDescriptor_HISTOGRAM
+				case typeSummary:
+					m.GetMetricDescriptor().Type = otlp.MetricDescriptor_SUMMARY
+				}
+			}
+		}
 	}
 }
