@@ -15,9 +15,11 @@
 package prometheusremotewriteexporter
 
 import (
+	"github.com/pkg/errors"
 	"log"
 	"sort"
 	"strings"
+	"time"
 	"unicode"
 
 	"github.com/prometheus/prometheus/prompb"
@@ -27,9 +29,17 @@ import (
 )
 
 const (
-	totalStr  = "total"
-	delimeter = "_"
-	keyStr    = "key"
+
+	nameStr     = "__name__"
+	sumStr      = "_sum"
+	countStr    = "_count"
+	bucketStr   = "_bucket"
+	leStr       = "le"
+	quantileStr = "quantile"
+	pInfStr     = "+Inf"
+	totalStr    = "total"
+	delimeter   = "_"
+	keyStr      = "key"
 )
 
 // ByLabelName enables the usage of sort.Sort() with a slice of labels
@@ -177,6 +187,29 @@ func getPromMetricName(desc *otlp.MetricDescriptor, ns string) string {
 		b.WriteString(totalStr)
 	}
 	return sanitize(b.String())
+}
+
+
+// Simple helper function that takes the <Signature String - *TimeSeries> map
+// and creates a WriteRequest from the struct -- can move to the helper.go file
+func wrapTimeSeries(tsMap map[string]*prompb.TimeSeries) (*prompb.WriteRequest, error) {
+	if len(tsMap) == 0 {
+		return nil, errors.Errorf("invalid TsMap: cannot be empty map")
+	}
+	TsArray := []prompb.TimeSeries{}
+	for _, v := range tsMap {
+		TsArray = append(TsArray, *v)
+	}
+	wrapped := prompb.WriteRequest{
+		Timeseries: TsArray,
+		//Other parameters of the WriteRequest are unnecessary for our Export
+	}
+	return &wrapped, nil
+}
+
+// convertTimeStamp converts OTLP timestamp in ns to timestamp in ms
+func convertTimeStamp(timestamp uint64) int64 {
+	return int64(timestamp / uint64(int64(time.Millisecond)/int64(time.Nanosecond)))
 }
 
 // copied from prometheus-go-metric-exporter
