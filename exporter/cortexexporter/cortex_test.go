@@ -504,7 +504,7 @@ func Test_shutdown(t *testing.T) {
 		wg:        new(sync.WaitGroup),
 		closeChan: make(chan struct{}),
 	}
-	wg:=new(sync.WaitGroup)
+	wg := new(sync.WaitGroup)
 	errChan := make(chan error, 5)
 	for i := 0; i < 5; i++ {
 		wg.Add(1)
@@ -540,6 +540,21 @@ func Test_shutdown(t *testing.T) {
 
 func Test_Export(t *testing.T) {
 	return
+}
+
+func runExportPipeline(t *testing.T) {
+
+	//serverReceive := make(chan string)
+	//First we will construct TimeSeries from the testutils package
+	labels := getPromLabels(label11, value11, label12, value12, label21, value21, label22, value22)
+	sample1 := getSample(floatVal1, time1)
+	sample2 := getSample(floatVal2, time2)
+	ts := getTimeSeries(labels, sample1, sample2)
+
+}
+
+func receiveExportedMetrics(t *testing.T) {
+
 }
 
 /*
