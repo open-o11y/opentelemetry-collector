@@ -225,8 +225,33 @@ func (ce *cortexExporter) pushMetrics(ctx context.Context, md pdata.Metrics) (in
 		return 0, nil
 	}
 }
-func (ce *cortexExporter) Export(map[string]*prompb.TimeSeries) error {
-	return nil
+
+func (ce *Exporter) WrapTimeSeries(ts *[]prompb.TimeSeries) prompb.WriteRequest  {
+	return //will populate later
+}
+
+func (ce *Exporter) Export(map[string]*prompb.TimeSeries) error {
+	//TODO:: Error handling
+	data, err := proto.Marshal(req)
+	if err != nil {
+		return err
+	}
+	compressed := snappy.Encode(nil, data)
+	httpReq, err := http.NewRequest("POST", c.url.String(), bytes.NewReader(compressed))
+	if err != nil {
+		return err
+	}
+	httpReq.Header.Add("Content-Encoding", "snappy")
+	httpReq.Header.Set("Content-Type", "application/x-protobuf")
+	httpReq.Header.Set("X-Prometheus-Remote-Write-Version", "0.1.0")
+	httpReq = httpReq.WithContext(ctx)
+
+	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
+	defer cancel()
+
+	httpResp, err := ctxhttp.Do(ctx, c.client, httpReq)
+	return err
+}
 }
 
 // create Prometheus metric name by attaching namespace prefix, unit, and _total suffix
