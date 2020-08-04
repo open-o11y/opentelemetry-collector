@@ -16,15 +16,21 @@ package cortexexporter
 
 import (
 	"context"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
 	"strconv"
 	"sync"
 	"testing"
 
+	"github.com/golang/snappy"
 	"github.com/prometheus/prometheus/prompb"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/consumer/pdatautil"
 	common "go.opentelemetry.io/collector/internal/data/opentelemetry-proto-gen/common/v1"
 	"go.opentelemetry.io/collector/internal/data/testdata"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/stretchr/testify/assert"
 
@@ -539,17 +545,46 @@ func Test_shutdown(t *testing.T) {
 }
 
 func Test_Export(t *testing.T) {
-	return
+
+	//This is supposed to represent the Cortex gateway instance, and how the Cortex Gateway receives and parses the writeRequest
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			t.Fatal(err)
+		}
+		assert.Equal(t, "0.1.0", r.Header.Get("X-Prometheus-Remote-Write-Version:"))
+		assert.Equal(t, "Snappy", r.Header.Get("Content-Encoding"))
+		assert.NotNil(t, r.Header.Get("Tenant-id"))
+		writeReq := prompb.WriteRequest{}
+		unzipped := []byte{}
+		snappy.Decode(unzipped, body)
+		ok := proto.Unmarshal(unzipped, writeReq)
+		require.NotNil(t, ok)
+		assert.EqualValues(t, 2, writeReq.Timeseries)
+	}))
+	defer server.Close()
+	serverURL, err := url.Parse(server.URL)
+	assert.NoError(t, err)
+
 }
 
-func runExportPipeline(t *testing.T) {
+func runExportPipeline(t *testing.T, endpoint string) error {
 
 	//serverReceive := make(chan string)
-	//First we will construct TimeSeries from the testutils package
+	//First we will construct a TimeSeries array from the testutils package
 	labels := getPromLabels(label11, value11, label12, value12, label21, value21, label22, value22)
 	sample1 := getSample(floatVal1, time1)
 	sample2 := getSample(floatVal2, time2)
-	ts := getTimeSeries(labels, sample1, sample2)
+	ts1 := getTimeSeries(labels, sample1, sample2)
+	testmap := make(map[string]*prompb.TimeSeries)
+	testmap["test"] = ts1
+	HTTPClient := http.DefaultClient
+	//after this, instantiate a CortexExporter with the current HTTP client and endpoint set to localhost:8888
+	ce := newCortexExporter("test", endpoint, HTTPClient)
+	err := ce.Export(testmap)
+	return err
+
+	//after this, there should be a push to the endpoint of our TimeSeries array
 
 }
 
