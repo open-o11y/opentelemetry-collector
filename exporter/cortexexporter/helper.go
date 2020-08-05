@@ -66,7 +66,7 @@ func addSample(tsMap map[string]*prompb.TimeSeries, sample *prompb.Sample, lbs [
 	}
 }
 
-// timeSeries return a string signature in the form of:
+// timeSeries return a string signature of a OTLP metric in the form of:
 // 		TYPE-label1-value1- ...  -labelN-valueN
 // the label slice should not contain duplicate label names; this method sorts the slice by label name before creating
 // the signature.
@@ -83,7 +83,7 @@ func timeSeriesSignature(t otlp.MetricDescriptor_Type, lbs *[]prompb.Label) stri
 	return b.String()
 }
 
-// createLabelSet creates a slice of Cortex Label with OTLP labels and paris of string values.
+// createLabelSet c
 // Unpaired string value is ignored. String pairs overwrites OTLP labels if collision happens, and the overwrite is
 // logged. Resultant label names are sanitized.
 func createLabelSet(labels []*common.StringKeyValue, extras ...string) []prompb.Label {
