@@ -16,17 +16,68 @@ package prometheusremotewriteexporter
 
 import (
 	"context"
+	"net/http"
+	"time"
 
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/config/confighttp"
 	"go.opentelemetry.io/collector/config/configmodels"
 	"go.opentelemetry.io/collector/exporter/exporterhelper"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/aws/signer/v4"
 )
 
 const (
 	// The value of "type" key in configuration.
 	typeStr = "prometheusremotewrite"
 )
+// Custom RoundTripper
+type SigningRoundTripper struct {
+	transport http.RoundTripper
+	signer	*v4.Signer
+	cfg 	*aws.Config
+}
+// Custom RoundTrip
+func (si *SigningRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	// Sign the request
+	headers, err := si.signer.Sign(req,  nil, "service name", *si.cfg.Region, time.Now())
+	if err != nil {
+		// might need a response here
+		return nil, err
+	}
+	for k,v := range headers {
+		req.Header[k] = v
+	}
+	// Send the request to Cortex
+	response, err := si.transport.RoundTrip(req)
+
+	return response, err
+}
+
+// the following are methods we would reimplement
+func createClient (origClient *http.Client) (*http.Client, error) {
+	sess, err := session.NewSession(&aws.Config{
+		Region: aws.String("us-west-2")},
+	)
+	if err != nil {
+		return nil, err
+	}
+	// Get Credentials, either as a file or as environemntal vairables
+	creds := sess.Config.Credentials
+	signer := v4.NewSigner(creds)
+	// Initialize Client with interceptor
+	client := &http.Client{
+		Transport: &SigningRoundTripper{
+			transport: origClient.Transport,
+			signer:		signer,
+			cfg:		sess.Config,
+		},
+	}
+	return client, nil
+
+}
 
 func NewFactory() component.ExporterFactory {
 	return exporterhelper.NewFactory(
