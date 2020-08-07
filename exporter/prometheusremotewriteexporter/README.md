@@ -46,4 +46,4 @@ File structure:
 
 - `factory.go`: initialization methods for creating default configuration and the exporter
 
-Feature in development:  derive Prometheus `job` or `instance` label from Resource, or allow users to configure which Resource attributes needs to be added as metric label_
+Feature in development:  _derive Prometheus `job` or `instance` label from Resource, or allow users to configure which Resource attributes needs to be added as metric label_
