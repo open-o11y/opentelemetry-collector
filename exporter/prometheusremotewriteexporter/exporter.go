@@ -60,7 +60,9 @@ func newPrwExporter(namespace string, endpoint string, client *http.Client) (*pr
 	if err != nil {
 		return nil, errors.Errorf("invalid endpoint")
 	}
-
+	if len(endpoint) == 0 {
+		return nil, errors.Errorf("invalid endpoint")
+	}
 	return &prwExporter{
 		namespace:   namespace,
 		endpointURL: endpointURL,

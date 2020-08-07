@@ -345,6 +345,14 @@ func Test_newPrwExporter(t *testing.T) {
 			true,
 		},
 		{
+			"empty_namespace",
+			config,
+			"",
+			"http://some.url:9411/api/prom/push",
+			nil,
+			true,
+		},
+		{
 			"success_case",
 			config,
 			"test",
