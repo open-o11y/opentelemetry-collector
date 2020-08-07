@@ -6,10 +6,9 @@ The following settings are required:
 
 - `endpoint`: protocol:host:port to which the exporter is going to send traces or metrics, using 
 the HTTP/HTTPS protocol. 
-
-- `namespace`: suffix to metric name attached to each metric.
-
+ 
 The following settings can be optionally configured:
+- `namespace`: suffix to metric name attached to each metric.
 - `headers`: additional headers attached to each HTTP request. `X-Prometheus-Remote-Write-Version` cannot be set by users
 and is attached to each request. 
 - `insecure` (default = false): whether to enable client transport security for
