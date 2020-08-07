@@ -6,9 +6,10 @@ The following settings are required:
 
 - `endpoint`: protocol:host:port to which the exporter is going to send traces or metrics, using 
 the HTTP/HTTPS protocol. 
- 
-The following settings can be optionally configured:
+
 - `namespace`: suffix to metric name attached to each metric.
+
+The following settings can be optionally configured:
 - `headers`: additional headers attached to each HTTP request. `X-Prometheus-Remote-Write-Version` cannot be set by users
 and is attached to each request. 
 - `insecure` (default = false): whether to enable client transport security for
@@ -28,6 +29,7 @@ Example:
 ```yaml
 exporters:
 prometheusremotewrite:
+ namespace: "example"
  endpoint: "http://some.url:9411/api/prom/push"
 ```
 The full list of settings exposed for this exporter are documented [here](./config.go)
