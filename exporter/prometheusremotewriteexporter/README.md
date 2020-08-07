@@ -46,4 +46,11 @@ File structure:
 
 - `factory.go`: initialization methods for creating default configuration and the exporter
 
-Feature in development:  derive Prometheus `job` or `instance` label from Resource, or allow users to configure which Resource attributes needs to be added as metric label_
+Feature in development:  _derive Prometheus `job` or `instance` label from Resource, or allow users to configure which Resource attributes needs to be added as metric label_
+
+Testing:
+
+Unit tests has 92% code coverage. There are tests with HTTP Server as mock backends. We will add end-to-end tests and pipeline testing with Cortex resource on this [link](https://cortexmetrics.io/docs/contributing/how-integration-tests-work/), and we’d like to here more suggestions and information on whether there are other existing testing environment for our use case, how to setup a complete pipeline with Cortex gateway.
+
+
+
