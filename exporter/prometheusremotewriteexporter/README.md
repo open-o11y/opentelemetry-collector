@@ -47,6 +47,7 @@ File structure:
 - `factory.go`: initialization methods for creating default configuration and the exporter
 
 Feature in development:  _derive Prometheus `job` or `instance` label from Resource, or allow users to configure which Resource attributes needs to be added as metric label_
+<<<<<<< HEAD
 
 Testing:
 
@@ -54,3 +55,5 @@ Unit tests has 92% code coverage. There are tests with HTTP Server as mock backe
 
 
 
+=======
+>>>>>>> 8d413f65aafd8a9c817b0bf1e1b6b8d350944e61
