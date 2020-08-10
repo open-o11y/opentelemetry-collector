@@ -93,6 +93,7 @@ func createMetricsExporter(_ context.Context, _ component.ExporterCreateParams,
 	cCfg := cfg.(*Config)
 
 	client, err := cCfg.HTTPClientSettings.ToClient()
+	client, err = createClient(client)
 
 	if err != nil {
 		return nil, err
