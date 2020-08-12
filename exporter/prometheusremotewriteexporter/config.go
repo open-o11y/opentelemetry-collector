@@ -29,8 +29,8 @@ type Config struct {
 	exporterhelper.RetrySettings   `mapstructure:"retry_on_failure"`
 
 	// Namespace if set, exports metrics under the provided value.*/
-	Namespace string `mapstructure:"namespace"`
-
+	Namespace  string            `mapstructure:"namespace"`
+	Attributes map[string]string `mapstructure:"attributes"`
 	// Optional headers configuration for authorization and security/extra metadata
 	Headers map[string]string `mapstructure:"headers"`
 

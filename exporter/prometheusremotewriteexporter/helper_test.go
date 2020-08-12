@@ -23,6 +23,7 @@ import (
 
 	common "go.opentelemetry.io/collector/internal/data/opentelemetry-proto-gen/common/v1"
 	otlp "go.opentelemetry.io/collector/internal/data/opentelemetry-proto-gen/metrics/v1"
+	resource "go.opentelemetry.io/collector/internal/data/opentelemetry-proto-gen/resource/v1"
 )
 
 // Test_validateMetrics checks validateMetrics return true if a type and temporality combination is valid, false
@@ -276,6 +277,55 @@ func Test_getPromMetricName(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.Equal(t, tt.want, getPromMetricName(tt.desc, tt.ns))
+		})
+	}
+
+}
+
+func Test_addAttributesAsLabels(t *testing.T) {
+	res := resource.Resource{
+		Attributes: []*common.KeyValue{
+			{
+				Key: "bool_val", Value: &common.AnyValue{Value: &common.AnyValue_BoolValue{BoolValue: true}},
+			},
+			{
+				Key: "int_val", Value: &common.AnyValue{Value: &common.AnyValue_IntValue{IntValue: 1}},
+			},
+			{
+				Key: "double_val", Value: &common.AnyValue{Value: &common.AnyValue_DoubleValue{DoubleValue: 1.0}},
+			},
+			{
+				Key: "string_val", Value: &common.AnyValue{Value: &common.AnyValue_StringValue{StringValue: "hello"}},
+			},
+		},
+		DroppedAttributesCount: 0,
+	}
+
+	tests := []struct {
+		name        string
+		resource    resource.Resource
+		attrMap     map[string]string
+		returnError bool
+		want        []prompb.Label
+	}{
+		{"multiple_attributes of different_types",
+			res,
+			map[string]string{
+				"bool_val":   "false",
+				"int_val":    "1",
+				"double_val": "1.0",
+				"string_val": "hello",
+			},
+			false,
+			getPromLabels("bool_val", "true", "int_val", "1", "double_val", "1.000000", "string_val", "hello"),
+		},
+	}
+	// run tests
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			labels := []prompb.Label{}
+			addAttributesAsLabels(&labels, &tt.resource, tt.attrMap)
+			assert.ElementsMatch(t, tt.want, labels)
 		})
 	}
 

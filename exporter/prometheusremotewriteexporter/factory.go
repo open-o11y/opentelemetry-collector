@@ -52,7 +52,7 @@ func createMetricsExporter(_ context.Context, _ component.ExporterCreateParams,
 		return nil, err
 	}
 
-	prwe, err := newPrwExporter(cCfg.Namespace, cCfg.HTTPClientSettings.Endpoint, client, cCfg.Headers)
+	prwe, err := newPrwExporter(cCfg.Namespace, cCfg.HTTPClientSettings.Endpoint, client, cCfg.Headers, cCfg.Attributes)
 
 	if err != nil {
 		return nil, err
@@ -84,8 +84,9 @@ func createDefaultConfig() configmodels.Exporter {
 			TypeVal: typeStr,
 			NameVal: typeStr,
 		},
-		Namespace: "",
-		Headers:   map[string]string{},
+		Namespace:  "",
+		Headers:    map[string]string{},
+		Attributes: map[string]string{},
 
 		TimeoutSettings: exporterhelper.CreateDefaultTimeoutSettings(),
 		RetrySettings:   exporterhelper.CreateDefaultRetrySettings(),

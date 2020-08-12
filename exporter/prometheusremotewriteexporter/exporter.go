@@ -44,13 +44,15 @@ type prwExporter struct {
 	endpointURL *url.URL
 	client      *http.Client
 	headers     map[string]string
+	attributes  map[string]string
 	wg          *sync.WaitGroup
 	closeChan   chan struct{}
 }
 
 // newPrwExporter initializes a new prwExporter instance and sets fields accordingly.
 // client parameter cannot be nil.
-func newPrwExporter(namespace string, endpoint string, client *http.Client, headers map[string]string) (*prwExporter, error) {
+func newPrwExporter(namespace string, endpoint string, client *http.Client, headers map[string]string,
+	attributes map[string]string) (*prwExporter, error) {
 
 	if client == nil {
 		return nil, errors.Errorf("http client cannot be nil")
@@ -66,6 +68,7 @@ func newPrwExporter(namespace string, endpoint string, client *http.Client, head
 		endpointURL: endpointURL,
 		client:      client,
 		headers:     headers,
+		attributes:  attributes,
 		wg:          new(sync.WaitGroup),
 		closeChan:   make(chan struct{}),
 	}, nil
@@ -96,6 +99,10 @@ func (prwe *prwExporter) pushMetrics(ctx context.Context, md pdata.Metrics) (int
 		resourceMetrics := data.MetricDataToOtlp(pdatautil.MetricsToInternalMetrics(md))
 		for _, r := range resourceMetrics {
 			// TODO: add resource attributes as labels
+			// labels from resource
+			labels := []prompb.Label{}
+			addAttributesAsLabels(&labels, r.Resource, prwe.attributes)
+
 			for _, instMetrics := range r.InstrumentationLibraryMetrics {
 				// TODO: add instrumentation library information as labels
 				for _, metric := range instMetrics.Metrics {

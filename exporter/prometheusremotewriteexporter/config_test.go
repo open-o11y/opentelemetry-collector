@@ -74,6 +74,11 @@ func TestLoadConfig(t *testing.T) {
 				"prometheus-remote-write-version": "0.1.0",
 				"tenant-id":                       "234"},
 
+			Attributes: map[string]string{
+				"job":      "collector_scrapte",
+				"instance": "collector1",
+			},
+
 			HTTPClientSettings: confighttp.HTTPClientSettings{
 				Endpoint: "localhost:8888",
 				TLSSetting: configtls.TLSClientSetting{

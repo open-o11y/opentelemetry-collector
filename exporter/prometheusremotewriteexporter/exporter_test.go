@@ -356,7 +356,7 @@ func Test_newPrwExporter(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			prwe, err := newPrwExporter(tt.namespace, tt.endpoint, tt.client, testHeaders)
+			prwe, err := newPrwExporter(tt.namespace, tt.endpoint, tt.client, testHeaders, nil)
 			if tt.returnError {
 				assert.Error(t, err)
 				return
@@ -493,7 +493,7 @@ func runExportPipeline(t *testing.T, ts *prompb.TimeSeries, endpoint *url.URL) e
 
 	HTTPClient := http.DefaultClient
 	//after this, instantiate a CortexExporter with the current HTTP client and endpoint set to passed in endpoint
-	prwe, err := newPrwExporter("test", endpoint.String(), HTTPClient, testHeaders)
+	prwe, err := newPrwExporter("test", endpoint.String(), HTTPClient, testHeaders, nil)
 	if err != nil {
 		return err
 	}
@@ -722,7 +722,7 @@ func Test_pushMetrics(t *testing.T) {
 			// c, err := config.HTTPClientSettings.ToClient()
 			// assert.Nil(t, err)
 			c := http.DefaultClient
-			prwe, nErr := newPrwExporter(config.Namespace, serverURL.String(), c, testHeaders)
+			prwe, nErr := newPrwExporter(config.Namespace, serverURL.String(), c, testHeaders, nil)
 			require.NoError(t, nErr)
 			numDroppedTimeSeries, err := prwe.pushMetrics(context.Background(), *tt.md)
 			assert.Equal(t, tt.numDroppedTimeSeries, numDroppedTimeSeries)

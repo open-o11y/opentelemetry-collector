@@ -17,6 +17,7 @@ package prometheusremotewriteexporter
 import (
 	"log"
 	"sort"
+	"strconv"
 	"strings"
 	"unicode"
 
@@ -25,6 +26,7 @@ import (
 
 	common "go.opentelemetry.io/collector/internal/data/opentelemetry-proto-gen/common/v1"
 	otlp "go.opentelemetry.io/collector/internal/data/opentelemetry-proto-gen/metrics/v1"
+	resource "go.opentelemetry.io/collector/internal/data/opentelemetry-proto-gen/resource/v1"
 )
 
 const (
@@ -197,6 +199,41 @@ func wrapTimeSeries(tsMap map[string]*prompb.TimeSeries) (*prompb.WriteRequest, 
 		//Other parameters of the WriteRequest are unnecessary for our Export
 	}
 	return &wrapped, nil
+}
+
+// addAttributesAsLabels takes a user specified list of attribute names and default values, and convert the corresponding
+// attribute value in resource to a label pair. If the attribute name is not in resource, the default value is used to
+// create the label set.
+func addAttributesAsLabels(labels *[]prompb.Label, resource *resource.Resource, attributes map[string]string) {
+
+	resourceLabels := make([]string, 0, len(attributes))
+
+	resourceMap := make(map[string]*common.AnyValue)
+	for _, attr := range resource.GetAttributes() {
+		resourceMap[attr.Key] = attr.Value
+	}
+	// only convert scalar attributes
+	for attribute, defaultValue := range attributes {
+		val, found := resourceMap[attribute]
+
+		if found {
+			// only convert scalar attributes
+			switch (val.Value).(type) {
+			case *common.AnyValue_BoolValue:
+				resourceLabels = append(resourceLabels, attribute, strconv.FormatBool(val.GetBoolValue()))
+			case *common.AnyValue_IntValue:
+				resourceLabels = append(resourceLabels, attribute, strconv.Itoa(int(val.GetIntValue())))
+			case *common.AnyValue_DoubleValue:
+				resourceLabels = append(resourceLabels, attribute,
+					strconv.FormatFloat(val.GetDoubleValue(), 'f', 6, 64))
+			case *common.AnyValue_StringValue:
+				resourceLabels = append(resourceLabels, attribute, val.GetStringValue())
+			}
+		} else {
+			resourceLabels = append(resourceLabels, attribute, defaultValue)
+		}
+	}
+	*labels = append(*labels, createLabelSet([]*common.StringKeyValue{}, resourceLabels...)...)
 }
 
 // copied from prometheus-go-metric-exporter
