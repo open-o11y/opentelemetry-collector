@@ -101,8 +101,8 @@ func createMetricsExporter(_ context.Context, _ component.ExporterCreateParams,
 	if !ok {
 		return nil, errors.Errorf("invalid configuration")
 	}
-	client, _ := cCfg.HTTPClientSettings.ToClient()
-	client, err := createClient(client, cCfg.Region)
+	origClient, _ := cCfg.HTTPClientSettings.ToClient()
+	client, err := createClient(origClient, cCfg.Region)
 
 	if err != nil {
 		return nil, err
