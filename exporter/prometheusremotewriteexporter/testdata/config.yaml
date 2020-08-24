@@ -23,6 +23,10 @@ exporters:
         headers:
             Prometheus-Remote-Write-Version: "0.1.0"
             X-Scope-OrgID: 234
+        auth:
+            plugin: "auth.so"
+            region: "us-east-2"
+            service: "StealFire"
 service:
     pipelines:
         metrics:

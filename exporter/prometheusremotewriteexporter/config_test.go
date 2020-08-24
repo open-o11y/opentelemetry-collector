@@ -67,6 +67,11 @@ func Test_loadConfig(t *testing.T) {
 				MaxElapsedTime:  10 * time.Minute,
 			},
 			Namespace: "test-space",
+			AuthCfg: map[string]string{
+				"plugin":  "auth.so",
+				"region":  "us-east-2",
+				"service": "StealFire",
+			},
 			HTTPClientSettings: confighttp.HTTPClientSettings{
 				Endpoint: "localhost:8888",
 				TLSSetting: configtls.TLSClientSetting{

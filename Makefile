@@ -7,6 +7,7 @@ ALL_SRC := $(shell find . -name '*.go' \
 							-not -path '*/internal/data/opentelemetry-proto-gen/*' \
 							-not -path './.circleci/scripts/reportgenerator/*' \
 							-not -path './examples/demo/app/*' \
+							-not -path './exporter/prometheusremotewriteexporter/testdata/auth.go' \
 							-type f | sort)
 
 # ALL_PKGS is the list of all packages where ALL_SRC files reside.
@@ -53,7 +54,7 @@ all-pkgs:
 .DEFAULT_GOAL := all
 
 .PHONY: all
-all: checklicense impi lint misspell test otelcol
+all: impi lint misspell plugin test otelcol
 
 .PHONY: testbed-loadtest
 testbed-loadtest: otelcol
@@ -70,6 +71,10 @@ testbed-list-loadtest:
 .PHONY: testbed-list-correctness
 testbed-list-correctness:
 	TESTBED_CONFIG=inprocess.yaml $(GOTEST) -v ./testbed/correctness --test.list '.*'| grep "^Test"
+
+.PHONY: plugin
+plugin:
+	GO111MODULE=on CGO_ENABLED=0 go build -buildmode=plugin -o=./exporter/prometheusremotewriteexporter/testdata/auth.so ./exporter/prometheusremotewriteexporter/testdata/auth.go
 
 .PHONY: test
 test:
@@ -195,23 +200,11 @@ docker-otelcol:
 binaries: otelcol
 
 .PHONY: binaries-all-sys
-binaries-all-sys: binaries-darwin_amd64 binaries-linux_amd64 binaries-linux_arm64 binaries-windows_amd64
+binaries-all-sys: binaries-darwin_amd64
 
 .PHONY: binaries-darwin_amd64
 binaries-darwin_amd64:
 	GOOS=darwin  GOARCH=amd64 $(MAKE) binaries
-
-.PHONY: binaries-linux_amd64
-binaries-linux_amd64:
-	GOOS=linux   GOARCH=amd64 $(MAKE) binaries
-
-.PHONY: binaries-linux_arm64
-binaries-linux_arm64:
-	GOOS=linux   GOARCH=arm64 $(MAKE) binaries
-
-.PHONY: binaries-windows_amd64
-binaries-windows_amd64:
-	GOOS=windows GOARCH=amd64 EXTENSION=.exe $(MAKE) binaries
 
 .PHONY: deb-rpm-package
 %-package: ARCH ?= amd64
