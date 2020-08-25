@@ -70,7 +70,7 @@ func Test_loadConfig(t *testing.T) {
 			AuthCfg: map[string]string{
 				"plugin":  "auth.so",
 				"region":  "us-east-2",
-				"service": "StealFire",
+				"service": "execute-api",
 			},
 			HTTPClientSettings: confighttp.HTTPClientSettings{
 				Endpoint: "localhost:8888",
