@@ -26,7 +26,7 @@ exporters:
         auth:
             plugin: "auth.so"
             region: "us-east-2"
-            service: "StealFire"
+            service: "execute-api"
 service:
     pipelines:
         metrics:

@@ -74,7 +74,7 @@ testbed-list-correctness:
 
 .PHONY: plugin
 plugin:
-	GO111MODULE=on CGO_ENABLED=0 go build -buildmode=plugin -o=./exporter/prometheusremotewriteexporter/testdata/auth.so ./exporter/prometheusremotewriteexporter/testdata/auth.go
+	GO111MODULE=on go build -buildmode=plugin -o=./bin/auth.so $(BUILD_INFO) ./exporter/prometheusremotewriteexporter/testdata/auth.go
 
 .PHONY: test
 test:
@@ -161,7 +161,7 @@ install-tools:
 
 .PHONY: otelcol
 otelcol:
-	GO111MODULE=on CGO_ENABLED=0 go build -o ./bin/otelcol_$(GOOS)_$(GOARCH)$(EXTENSION) $(BUILD_INFO) ./cmd/otelcol
+	GO111MODULE=on go build -o ./bin/otelcol_$(GOOS)_$(GOARCH)$(EXTENSION) $(BUILD_INFO) ./cmd/otelcol
 
 .PHONY: run
 run:

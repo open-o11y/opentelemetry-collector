@@ -32,6 +32,7 @@ const (
 	pluginStr     = "plugin"
 	newAuthStr    = "NewAuth"
 	regionStr     = "region"
+	serviceStr	  = "service"
 	origClientStr = "origClient"
 )
 
@@ -79,6 +80,7 @@ func createMetricsExporter(_ context.Context, _ component.ExporterCreateParams,
 		// 4. use the module
 		params := map[string]interface{}{
 			regionStr:     prwCfg.AuthCfg[regionStr],
+			serviceStr:		prwCfg.AuthCfg[serviceStr],
 			origClientStr: client,
 		}
 		roundTripper, err := newAuthFunc(params)
