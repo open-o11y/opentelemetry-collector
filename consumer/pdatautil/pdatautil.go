@@ -136,7 +136,6 @@ func CloneMetricsDataOld(md consumerdata.MetricsData) consumerdata.MetricsData {
 			clone.Metrics = append(clone.Metrics, metricClone)
 		}
 	}
-
 	return clone
 }
 

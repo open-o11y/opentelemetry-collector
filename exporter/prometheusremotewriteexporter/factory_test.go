@@ -49,10 +49,10 @@ func Test_createMetricsExporter(t *testing.T) {
 		Insecure:   false,
 		ServerName: "",
 	}
-	authPluginConfig := createDefaultConfig().(*Config)
-	authPluginConfig.AuthCfg = map[string]string{
-		"plugin": "testdata/auth.so",
-		"region": "us-west-1",
+	authConfig := createDefaultConfig().(*Config)
+	authConfig.AuthCfg = map[string]string{
+		"service": "execute-api",
+		"region":  "us-east-2",
 	}
 	tests := []struct {
 		name        string
@@ -80,13 +80,11 @@ func Test_createMetricsExporter(t *testing.T) {
 			component.ExporterCreateParams{},
 			true,
 		},
-		/* this test breaks build because of "plugin was built with a different version of package runtime"
-			{"auth_plugin_case",
-			authPluginConfig,
+		{"auth_config_case",
+			authConfig,
 			component.ExporterCreateParams{},
 			false,
 		},
-		*/
 	}
 	// run tests
 	for _, tt := range tests {
