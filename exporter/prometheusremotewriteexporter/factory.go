@@ -21,9 +21,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"net/http/httputil"
 	"time"
-	"os"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -52,16 +50,20 @@ type SigningRoundTripper struct {
 }
 
 // RoundTrip signs each outgoing request
-func (si *SigningRoundTripper) RoundTrip(r *http.Request) (*http.Response, error) {
-	req := r.Clone(r.Context())	
+func (si *SigningRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	reqBody, err := req.GetBody()
+	if err != nil {
+                return nil, err
+        }
+
 	// Get the body
-	content, err := ioutil.ReadAll(req.Body)
+	content, err := ioutil.ReadAll(reqBody)
 	if err != nil {
 		return nil, err
 	}
 
 	body := bytes.NewReader(content)
-	log.Println(si.cfg.Credentials)
+	// log.Println(si.cfg.Credentials)
 
 	// Sign the request
 	headers, err := si.signer.Sign(req, body, si.service, *si.cfg.Region, time.Now())
@@ -69,21 +71,32 @@ func (si *SigningRoundTripper) RoundTrip(r *http.Request) (*http.Response, error
 		// might need a response here
 		return nil, err
 	}
-	for k, v := range headers {
-		req.Header[k] = v
+	for k, vs := range headers {
+		req.Header.Del(k)
+		for _, v := range vs {
+			req.Header.Add(k,v)
+		}
 	}
-	log.Println(req)
+	// log.Println(req)
 
-	requestDump, err := httputil.DumpRequest(req, true)
-	if err != nil {
-  		log.Println(err)
-	}
-	f, err := os.Create("~/dat")
-	 defer f.Close()
-	f.Write(requestDump)
+	// requestDump, err := httputil.DumpRequest(req, true)
+	// if err != nil {
+  	//	log.Println(err)
+	// }
+	// f, err := os.Create("./dat")
+	// defer f.Close()
+	// f.Write(requestDump)
+	// f.Sync()
+
 	// Send the request to Cortex
 	response, err := si.transport.RoundTrip(req)
-	log.Println(response)
+	// log.Println(response)
+	// bodyBytes, err := ioutil.ReadAll(response.Body)
+    	// if err != nil {
+        //	log.Fatal(err)
+    	// }
+    	// bodyString := string(bodyBytes)
+    	// log.Println("response: ", bodyString)
 	return response, err
 }
 
