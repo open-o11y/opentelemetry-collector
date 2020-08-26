@@ -68,7 +68,6 @@ func Test_loadConfig(t *testing.T) {
 			},
 			Namespace: "test-space",
 			AuthCfg: map[string]string{
-				"plugin":  "auth.so",
 				"region":  "us-east-2",
 				"service": "execute-api",
 			},

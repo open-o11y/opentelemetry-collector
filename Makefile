@@ -7,7 +7,6 @@ ALL_SRC := $(shell find . -name '*.go' \
 							-not -path '*/internal/data/opentelemetry-proto-gen/*' \
 							-not -path './.circleci/scripts/reportgenerator/*' \
 							-not -path './examples/demo/app/*' \
-							-not -path './exporter/prometheusremotewriteexporter/testdata/auth.go' \
 							-type f | sort)
 
 # ALL_PKGS is the list of all packages where ALL_SRC files reside.
@@ -32,6 +31,7 @@ STATIC_CHECK=staticcheck
 # BUILD_TYPE should be one of (dev, release).
 BUILD_TYPE?=release
 
+
 GIT_SHA=$(shell git rev-parse --short HEAD)
 BUILD_INFO_IMPORT_PATH=go.opentelemetry.io/collector/internal/version
 BUILD_X1=-X $(BUILD_INFO_IMPORT_PATH).GitHash=$(GIT_SHA)
@@ -50,11 +50,13 @@ all-srcs:
 
 all-pkgs:
 	@echo $(ALL_PKGS) | tr ' ' '\n' | sort
+all-env:
+	@printenv
 
 .DEFAULT_GOAL := all
 
 .PHONY: all
-all: impi lint misspell plugin test otelcol
+all: checklicense impi lint misspell test otelcol
 
 .PHONY: testbed-loadtest
 testbed-loadtest: otelcol
@@ -71,10 +73,6 @@ testbed-list-loadtest:
 .PHONY: testbed-list-correctness
 testbed-list-correctness:
 	TESTBED_CONFIG=inprocess.yaml $(GOTEST) -v ./testbed/correctness --test.list '.*'| grep "^Test"
-
-.PHONY: plugin
-plugin:
-	GO111MODULE=on go build -buildmode=plugin -o=./bin/auth.so $(BUILD_INFO) ./exporter/prometheusremotewriteexporter/testdata/auth.go
 
 .PHONY: test
 test:
@@ -161,7 +159,7 @@ install-tools:
 
 .PHONY: otelcol
 otelcol:
-	GO111MODULE=on go build -o ./bin/otelcol_$(GOOS)_$(GOARCH)$(EXTENSION) $(BUILD_INFO) ./cmd/otelcol
+	GO111MODULE=on CGO_ENABLED=0 go build -o ./bin/otelcol_$(GOOS)_$(GOARCH)$(EXTENSION) $(BUILD_INFO) ./cmd/otelcol
 
 .PHONY: run
 run:
@@ -200,11 +198,23 @@ docker-otelcol:
 binaries: otelcol
 
 .PHONY: binaries-all-sys
-binaries-all-sys: binaries-darwin_amd64
+binaries-all-sys: binaries-darwin_amd64 binaries-linux_amd64 binaries-linux_arm64 binaries-windows_amd64
 
 .PHONY: binaries-darwin_amd64
 binaries-darwin_amd64:
 	GOOS=darwin  GOARCH=amd64 $(MAKE) binaries
+
+.PHONY: binaries-linux_amd64
+binaries-linux_amd64:
+	GOOS=linux   GOARCH=amd64 $(MAKE) binaries
+
+.PHONY: binaries-linux_arm64
+binaries-linux_arm64:
+	GOOS=linux   GOARCH=arm64 $(MAKE) binaries
+
+.PHONY: binaries-windows_amd64
+binaries-windows_amd64:
+	GOOS=windows GOARCH=amd64 EXTENSION=.exe $(MAKE) binaries
 
 .PHONY: deb-rpm-package
 %-package: ARCH ?= amd64

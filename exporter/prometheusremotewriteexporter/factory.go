@@ -15,10 +15,17 @@
 package prometheusremotewriteexporter
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"io/ioutil"
+	"log"
 	"net/http"
-	"plugin"
+	"time"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
 
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/config/confighttp"
@@ -29,12 +36,105 @@ import (
 const (
 	// The value of "type" key in configuration.
 	typeStr       = "prometheusremotewrite"
-	pluginStr     = "plugin"
-	newAuthStr    = "NewAuth"
 	regionStr     = "region"
-	serviceStr	  = "service"
+	serviceStr    = "service"
 	origClientStr = "origClient"
 )
+
+// SigningRoundTripper is a Custom RoundTripper that performs AWS Sig V4
+type SigningRoundTripper struct {
+	transport http.RoundTripper
+	signer    *v4.Signer
+	service   string
+	cfg       *aws.Config
+}
+
+// RoundTrip signs each outgoing request
+func (si *SigningRoundTripper) RoundTrip(r *http.Request) (*http.Response, error) {
+	req := r.Clone(r.Context())
+	// Get the body
+	content, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	body := bytes.NewReader(content)
+
+	// Sign the request
+	headers, err := si.signer.Sign(req, body, si.service, *si.cfg.Region, time.Now())
+	if err != nil {
+		// might need a response here
+		return nil, err
+	}
+	for k, v := range headers {
+		req.Header[k] = v
+	}
+	log.Println(req)
+	// Send the request to Cortex
+	response, err := si.transport.RoundTrip(req)
+	log.Println(response)
+	return response, err
+}
+
+// NewAuth takes a map of strings as parameters and return a http.RoundTripper
+func NewAuth(params map[string]interface{}) (http.RoundTripper, error) {
+
+	reg, found := params[regionStr]
+	if !found {
+		return nil, errors.New("plugin error: region not specified")
+	}
+	region, isString := reg.(string)
+	if !isString {
+		return nil, errors.New("plugin error: region is not string")
+	}
+	serv, found := params[serviceStr]
+	if !found {
+		return nil, errors.New("plugin error: service not specified")
+	}
+
+	service, isString := serv.(string)
+	if !isString {
+		return nil, errors.New("plugin error: region is not string")
+	}
+
+	client, found := params[origClientStr]
+	if !found {
+		return nil, errors.New("plugin error: default client not specified")
+	}
+	origClient, isClient := client.(*http.Client)
+	if !isClient {
+		return nil, errors.New("plugin error: default client not specified")
+	}
+
+	// Initialize session with default credential chain
+	// https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html
+	sess, err := session.NewSession(&aws.Config{
+		Region: aws.String(region)},
+	)
+	if err != nil {
+		log.Println("AWS session initialization failed")
+	}
+
+	if _, err = sess.Config.Credentials.Get(); err != nil {
+		log.Println("AWS session initialized. Credentials are not nil")
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	// Get Credentials, either from ./aws or from environmental variables
+	creds := sess.Config.Credentials
+	signer := v4.NewSigner(creds)
+
+	rtp := SigningRoundTripper{
+		transport: origClient.Transport,
+		signer:    signer,
+		cfg:       sess.Config,
+		service:   service,
+	}
+	// return a RoundTripper
+	return &rtp, nil
+}
 
 func NewFactory() component.ExporterFactory {
 	return exporterhelper.NewFactory(
@@ -50,48 +150,25 @@ func createMetricsExporter(_ context.Context, _ component.ExporterCreateParams,
 	if !ok {
 		return nil, errors.New("invalid configuration")
 	}
-
 	client, cerr := prwCfg.HTTPClientSettings.ToClient()
 	if cerr != nil {
 		return nil, cerr
 	}
+	if prwCfg.AuthCfg != nil {
+		authConfig := make(map[string]interface{})
+		authConfig[serviceStr] = prwCfg.AuthCfg[serviceStr]
+		authConfig[regionStr] = prwCfg.AuthCfg[regionStr]
+		authConfig[origClientStr] = client
 
-	// 0. check if auth plugin is present
-	auth := prwCfg.AuthCfg
-	if auth != nil && auth[pluginStr] != "" {
-		// 1. open the so file to load the symbols
-		plug, err := plugin.Open(auth[pluginStr])
+		roundTripper, err := NewAuth(authConfig)
 		if err != nil {
 			return nil, err
-		}
-		// 2. look up NewAuth
-		newAuth, err := plug.Lookup(newAuthStr)
-		if err != nil {
-			return nil, err
-		}
-		// 3. Assert that loaded symbol is of the type func (params map[string]interface{}) (http.RoundTripper, error)
-		// cannot create an alias for func (params map[string]interface{}) (http.RoundTripper, error) because will
-		// cause unexpected type error.
-		newAuthFunc, ok := newAuth.(func(map[string]interface{}) (http.RoundTripper, error))
-		if !ok {
-			return nil, errors.New("unexpected type from plugin")
 		}
 
-		// 4. use the module
-		params := map[string]interface{}{
-			regionStr:     prwCfg.AuthCfg[regionStr],
-			serviceStr:		prwCfg.AuthCfg[serviceStr],
-			origClientStr: client,
-		}
-		roundTripper, err := newAuthFunc(params)
-		if err != nil {
-			return nil, err
-		}
 		client.Transport = roundTripper
 	}
 
 	prwe, err := newPrwExporter(prwCfg.Namespace, prwCfg.HTTPClientSettings.Endpoint, client)
-
 	if err != nil {
 		return nil, err
 	}
