@@ -21,7 +21,9 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/http/httputil"
 	"time"
+	"os"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -51,8 +53,7 @@ type SigningRoundTripper struct {
 
 // RoundTrip signs each outgoing request
 func (si *SigningRoundTripper) RoundTrip(r *http.Request) (*http.Response, error) {
-	req := r.Clone(r.Context())
-
+	req := r.Clone(r.Context())	
 	// Get the body
 	content, err := ioutil.ReadAll(req.Body)
 	if err != nil {
@@ -63,7 +64,7 @@ func (si *SigningRoundTripper) RoundTrip(r *http.Request) (*http.Response, error
 	log.Println(si.cfg.Credentials)
 
 	// Sign the request
-	headers, err := si.signer.Presign(req, body, si.service, *si.cfg.Region, 5*time.Minute, time.Now())
+	headers, err := si.signer.Sign(req, body, si.service, *si.cfg.Region, time.Now())
 	if err != nil {
 		// might need a response here
 		return nil, err
@@ -72,6 +73,14 @@ func (si *SigningRoundTripper) RoundTrip(r *http.Request) (*http.Response, error
 		req.Header[k] = v
 	}
 	log.Println(req)
+
+	requestDump, err := httputil.DumpRequest(req, true)
+	if err != nil {
+  		log.Println(err)
+	}
+	f, err := os.Create("~/dat")
+	 defer f.Close()
+	f.Write(requestDump)
 	// Send the request to Cortex
 	response, err := si.transport.RoundTrip(req)
 	log.Println(response)
@@ -112,6 +121,7 @@ func NewAuth(params map[string]interface{}) (http.RoundTripper, error) {
 	// https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html
 	sess, err := session.NewSession(&aws.Config{
 		Region: aws.String(region)},
+		aws.NewConfig().WithLogLevel(aws.LogDebugWithSigning),	
 	)
 	if err != nil {
 		log.Println("AWS session initialization failed")
@@ -125,6 +135,8 @@ func NewAuth(params map[string]interface{}) (http.RoundTripper, error) {
 	creds := sess.Config.Credentials
 	signer := v4.NewSigner(creds)
 
+	signer.Debug = aws.LogDebugWithSigning
+	signer.Logger = aws.NewDefaultLogger()	
 	rtp := SigningRoundTripper{
 		transport: origClient.Transport,
 		signer:    signer,
