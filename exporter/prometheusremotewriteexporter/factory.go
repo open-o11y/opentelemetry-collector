@@ -52,6 +52,7 @@ type SigningRoundTripper struct {
 // RoundTrip signs each outgoing request
 func (si *SigningRoundTripper) RoundTrip(r *http.Request) (*http.Response, error) {
 	req := r.Clone(r.Context())
+
 	// Get the body
 	content, err := ioutil.ReadAll(req.Body)
 	if err != nil {
@@ -59,9 +60,10 @@ func (si *SigningRoundTripper) RoundTrip(r *http.Request) (*http.Response, error
 	}
 
 	body := bytes.NewReader(content)
+	log.Println(si.cfg.Credentials)
 
 	// Sign the request
-	headers, err := si.signer.Sign(req, body, si.service, *si.cfg.Region, time.Now())
+	headers, err := si.signer.Presign(req, body, si.service, *si.cfg.Region, 5*time.Minute, time.Now())
 	if err != nil {
 		// might need a response here
 		return nil, err
@@ -116,10 +118,7 @@ func NewAuth(params map[string]interface{}) (http.RoundTripper, error) {
 	}
 
 	if _, err = sess.Config.Credentials.Get(); err != nil {
-		log.Println("AWS session initialized. Credentials are not nil")
-	}
-	if err != nil {
-		return nil, err
+		log.Println("AWS session initialized, but credentials are not loaded correctly")
 	}
 
 	// Get Credentials, either from ./aws or from environmental variables
