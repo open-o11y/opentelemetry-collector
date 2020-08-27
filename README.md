@@ -54,7 +54,7 @@ exporters:
     namespace: otel-collector
     auth:
       region: "us-west-2"
-      service: "stealfire"
+      service: "aps"
     timeout: 10s
   logging:
     loglevel: debug
