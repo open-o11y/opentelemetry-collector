@@ -30,7 +30,8 @@ builders, a service package component, for an implementation of the MetricExport
  invokes the factory code inside the Prometheus Remote Write Exporter package to create an instance of the Prometheus 
  Remote Write Exporter. When invoked, factory uses the exporter helper package to wrap the Exporter implementation 
  inside the MetricExporter interface, and returns the instance to the Collector Application. **The factory can also 
- pass in an [Sig V4 interceptor-attached http.Client](https://github.com/open-o11y/opentelemetry-collector-o11y/blob/dd88d38914fc2b9faa5e3dd26606e3a4a46934c2/exporter/prometheusremotewriteexporter/factory.go#L181) to the exporter**.  Finally, the Collector Application
+ pass in an [Sig V4 interceptor-attached http.Client](https://github.com/open-o11y/opentelemetry-collector/blob/d21a840612d40d935ccd52142f06e7106ee82384/exporter/prometheusremotewriteexporter/factory.go#L181)
+ to the exporter**.  Finally, the Collector Application
   assembles the export pipeline with the exporter. During an export operation, the exporter behaves the same, but the 
   interceptor-attached http.Client performs signing of each request.
 
