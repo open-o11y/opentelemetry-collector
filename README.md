@@ -78,7 +78,7 @@ make testaps
 ```
 
 This starts a Collector based on configuration in `/test/otel-config.yaml` and runs OTLP metric load generator to send 
-metrics to the exporter. OTLP metrics are generated based on `/test/data/metrics.txt`. After the load generator exists,
+metrics to the exporter. OTLP metrics are generated based on `/test/data/olt.txt`. After the load generator exists,
  it runs a querier to get metrics from the specified endpoint and write the output in `/test/data/ans.txt`. 
 
 More details of testing, load generator and querier are described [here](./test/README.md). 

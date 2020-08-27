@@ -53,8 +53,8 @@ type SigningRoundTripper struct {
 func (si *SigningRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	reqBody, err := req.GetBody()
 	if err != nil {
-                return nil, err
-        }
+		return nil, err
+	}
 
 	// Get the body
 	content, err := ioutil.ReadAll(reqBody)
@@ -74,14 +74,14 @@ func (si *SigningRoundTripper) RoundTrip(req *http.Request) (*http.Response, err
 	for k, vs := range headers {
 		req.Header.Del(k)
 		for _, v := range vs {
-			req.Header.Add(k,v)
+			req.Header.Add(k, v)
 		}
 	}
 	// log.Println(req)
 
 	// requestDump, err := httputil.DumpRequest(req, true)
 	// if err != nil {
-  	//	log.Println(err)
+	//	log.Println(err)
 	// }
 	// f, err := os.Create("./dat")
 	// defer f.Close()
@@ -92,11 +92,11 @@ func (si *SigningRoundTripper) RoundTrip(req *http.Request) (*http.Response, err
 	response, err := si.transport.RoundTrip(req)
 	// log.Println(response)
 	// bodyBytes, err := ioutil.ReadAll(response.Body)
-    	// if err != nil {
-        //	log.Fatal(err)
-    	// }
-    	// bodyString := string(bodyBytes)
-    	// log.Println("response: ", bodyString)
+	// if err != nil {
+	//	log.Fatal(err)
+	// }
+	// bodyString := string(bodyBytes)
+	// log.Println("response: ", bodyString)
 	return response, err
 }
 
@@ -134,7 +134,7 @@ func NewAuth(params map[string]interface{}) (http.RoundTripper, error) {
 	// https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html
 	sess, err := session.NewSession(&aws.Config{
 		Region: aws.String(region)},
-		aws.NewConfig().WithLogLevel(aws.LogDebugWithSigning),	
+		aws.NewConfig().WithLogLevel(aws.LogDebugWithSigning),
 	)
 	if err != nil {
 		log.Println("AWS session initialization failed")
@@ -149,7 +149,7 @@ func NewAuth(params map[string]interface{}) (http.RoundTripper, error) {
 	signer := v4.NewSigner(creds)
 
 	signer.Debug = aws.LogDebugWithSigning
-	signer.Logger = aws.NewDefaultLogger()	
+	signer.Logger = aws.NewDefaultLogger()
 	rtp := SigningRoundTripper{
 		transport: origClient.Transport,
 		signer:    signer,

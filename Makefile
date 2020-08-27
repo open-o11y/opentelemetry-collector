@@ -7,6 +7,7 @@ ALL_SRC := $(shell find . -name '*.go' \
 							-not -path '*/internal/data/opentelemetry-proto-gen/*' \
 							-not -path './.circleci/scripts/reportgenerator/*' \
 							-not -path './examples/demo/app/*' \
+							-not -path './test/*' \
 							-type f | sort)
 
 # ALL_PKGS is the list of all packages where ALL_SRC files reside.
@@ -299,3 +300,15 @@ check-contrib:
 	make -C $(CONTRIB_PATH) test
 	@echo Restoring contrib to no longer use this core checkout
 	make -C $(CONTRIB_PATH) for-all CMD="go mod edit -dropreplace go.opentelemetry.io/collector"
+
+.PHONY: testaps
+testaps: otelcol run-colletor-to-aps send-load
+
+.PHONY: run-colletor-to-aps
+run-colletor-to-aps:
+	GO111MODULE=on go run --race ./cmd/otelcol/... --config  ./test/otel-collector-config.yaml &
+
+.PHONY: send-load
+send-load:
+	@echo Starting OTLP load generator
+	go run ./test/otlploadgenerator/*.go

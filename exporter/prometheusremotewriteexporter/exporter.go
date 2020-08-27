@@ -322,8 +322,8 @@ func (prwe *prwExporter) export(ctx context.Context, tsMap map[string]*prompb.Ti
 	httpReq.Header.Set("User-Agent", "otel-collector")
 	httpReq.Header.Set("Content-Type", "application/x-protobuf")
 	httpReq.Header.Set("X-Prometheus-Remote-Write-Version", "0.1.0")
-//	httpReq.Header.Set("Content-Length", strconv.Itoa(bytes.NewReader(compressedData).Len()))
-	
+	//	httpReq.Header.Set("Content-Length", strconv.Itoa(bytes.NewReader(compressedData).Len()))
+
 	//Changing context of the httpreq to global context
 	httpReq = httpReq.WithContext(ctx)
 

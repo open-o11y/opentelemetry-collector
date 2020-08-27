@@ -1,0 +1,29 @@
+receivers:
+     otlp:
+      protocols:
+         grpc:
+exporters:
+  prometheusremotewrite:
+    endpoint: "https://aps-workspaces-beta.us-west-2.amazonaws.com/workspaces/yang-yu-intern-test-ws/remote_write"
+    namespace: otel-collector
+    auth:
+      region: "us-west-2"
+      service: "stealfire"
+    timeout: 10s
+  logging:
+    loglevel: debug
+
+
+extensions:
+  health_check:
+  pprof:
+    endpoint: :1888
+  zpages:
+    endpoint: :55679
+
+service:
+  extensions:
+  pipelines:
+    metrics:
+      receivers: [otlp]
+      exporters: [logging,prometheusremotewrite]
