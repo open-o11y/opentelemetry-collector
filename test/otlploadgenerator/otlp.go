@@ -50,7 +50,8 @@ func main() {
 	// 		name, type, label1 labelvalue1 , value1 value2 value3 value4 value5
 	// gauge and counter has only one value
 	generateData()
-
+	// wait for collector to start
+	time.Sleep(time.Second * 5)
 	// connect to the Collector
 	clientConn, err := grpc.Dial(endpoint, grpc.WithInsecure())
 	if err != nil {
