@@ -90,10 +90,19 @@ func (prwe *prwExporter) pushMetrics(ctx context.Context, md pdata.Metrics) (int
 		errs := []string{}
 
 		resourceMetrics := data.MetricDataToOtlp(pdatautil.MetricsToInternalMetrics(md))
-		for _, r := range resourceMetrics {
-			for _, instMetrics := range r.InstrumentationLibraryMetrics {
+		for _, resourceMetric := range resourceMetrics {
+			if resourceMetric == nil {
+				continue
+			}
+			for _, instMetrics := range resourceMetric.InstrumentationLibraryMetrics {
+				if instMetrics == nil {
+					continue
+				}
 				// TODO: decide if instrumentation library information should be exported as labels
 				for _, metric := range instMetrics.Metrics {
+					if metric == nil {
+						continue
+					}
 					// check for valid type and temporality combination
 					if ok := validateMetrics(metric.MetricDescriptor); !ok {
 						dropped++
