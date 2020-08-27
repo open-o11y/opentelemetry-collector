@@ -12,3 +12,8 @@ To start a Collector instance and send to it using `otlploadgenerator`, run the 
 make testaps
 ```
 
+##`otlploadgenerator`
+The load generator first creates a `data.txt` file. This file is need so that the querier knows what the input data is.
+Each line in the file represents and OTLP metric. Then, it parse each line from the file and build OTLP metric. 
+It then creates a gRPC connection to the Collector, and sends the metric it builds. 
+
