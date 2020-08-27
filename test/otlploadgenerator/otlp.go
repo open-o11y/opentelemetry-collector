@@ -18,20 +18,20 @@ type sender struct {
 }
 
 var (
-	path      = "./data.txt" // data file path
-	item      = 1000         // total number of metrics / lines in output file
-	metric    = "metricName" // base metricName. output file has only unique metricName with a number suffix
+	path      = "./data.txt" 				// data file path
+	item      = 1000         				// total number of metrics / lines in output file
+	metric    = "metricName" 				// base metricName. output file has only unique metricName with a number suffix
 	gauge     = "gauge"
 	counter   = "counter"
 	histogram = "histogram"
 	summary   = "summary"
-	types     = []string{
+	types     = []string{					// types of metrics generatedq
 		counter,
 		gauge,
 		histogram,
 		summary,
 	}
-	labels = []string{ // each metric will have from 1 to 4 sets of labels
+	labels = []string{ 						// each metric will have from 1 to 4 sets of labels
 		"label1 value1",
 		"label2 value2",
 		"label3 value3",
@@ -43,6 +43,7 @@ var (
 	bounds     = []float64{0.01, 0.5, 0.99} // fixed quantile/buckets
 
 	endpoint = "localhost:55680"
+	waitTime = 5 * time.Second				// wait time between two sends
 )
 
 func main() {
@@ -124,7 +125,7 @@ func (s *sender) sendMetric(m *metrics.Metric) {
 	}
 	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
 	_, err := s.client.Export(ctx, &request)
-	time.Sleep(5 * time.Second)
+	time.Sleep(waitTime)
 	if err != nil {
 		log.Fatal(err)
 	}
