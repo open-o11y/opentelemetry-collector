@@ -17,5 +17,7 @@ The load generator first creates a `data.txt` file. This file is need so that th
 Each line in the file represents and OTLP metric. Then, it parse each line from the file and build OTLP metric. 
 It then creates a gRPC connection to the Collector, and sends the metric it builds. 
 
+See more detail [here](./otlploadgenerator/README.md)
+
 ## `querier`
 To be added.
