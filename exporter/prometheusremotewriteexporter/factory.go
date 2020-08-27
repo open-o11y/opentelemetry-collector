@@ -63,7 +63,6 @@ func (si *SigningRoundTripper) RoundTrip(req *http.Request) (*http.Response, err
 	}
 
 	body := bytes.NewReader(content)
-	// log.Println(si.cfg.Credentials)
 
 	// Sign the request
 	headers, err := si.signer.Sign(req, body, si.service, *si.cfg.Region, time.Now())
@@ -77,7 +76,7 @@ func (si *SigningRoundTripper) RoundTrip(req *http.Request) (*http.Response, err
 			req.Header.Add(k, v)
 		}
 	}
-	// log.Println(req)
+	log.Println(req)
 
 	// requestDump, err := httputil.DumpRequest(req, true)
 	// if err != nil {
@@ -91,12 +90,12 @@ func (si *SigningRoundTripper) RoundTrip(req *http.Request) (*http.Response, err
 	// Send the request to Cortex
 	response, err := si.transport.RoundTrip(req)
 	// log.Println(response)
-	// bodyBytes, err := ioutil.ReadAll(response.Body)
-	// if err != nil {
-	//	log.Fatal(err)
-	// }
-	// bodyString := string(bodyBytes)
-	// log.Println("response: ", bodyString)
+	 bodyBytes, err := ioutil.ReadAll(response.Body)
+	 if err != nil {
+		log.Fatal(err)
+	 }
+	 bodyString := string(bodyBytes)
+	 log.Println("response: ", bodyString)
 	return response, err
 }
 
