@@ -45,7 +45,7 @@ func generateData() {
 	for i := 0; i < item; i++ {
 
 		mName := metric + strconv.Itoa(i)
-		mType := types[rand.Intn(4)]
+		mType := types[rand.Intn(len(types))]
 		labelSize := rand.Intn(len(labels)) + 1
 		b := &strings.Builder{}
 		writeNameTypeLabel(mName, mType, labelSize, b)
