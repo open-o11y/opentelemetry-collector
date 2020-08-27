@@ -1,4 +1,4 @@
-#Testing Pipeline for Prometheus Remote Write Exporter
+# Testing Pipeline for Prometheus Remote Write Exporter
 The this package contains utilities for testing the Prometheus remote write exporter. 
 
 - `otlploadgenerator` generates and
@@ -12,10 +12,10 @@ To start a Collector instance and send to it using `otlploadgenerator`, run the 
 make testaps
 ```
 Note: With this command, the collector process has to be terminated manually after each run
-##`otlploadgenerator`
+## `otlploadgenerator`
 The load generator first creates a `data.txt` file. This file is need so that the querier knows what the input data is.
 Each line in the file represents and OTLP metric. Then, it parse each line from the file and build OTLP metric. 
 It then creates a gRPC connection to the Collector, and sends the metric it builds. 
 
-##`querier`
+## `querier`
 To be added.
