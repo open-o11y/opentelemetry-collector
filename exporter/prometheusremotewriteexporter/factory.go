@@ -65,17 +65,12 @@ func (si *SigningRoundTripper) RoundTrip(req *http.Request) (*http.Response, err
 	body := bytes.NewReader(content)
 
 	// Sign the request
-	headers, err := si.signer.Sign(req, body, si.service, *si.cfg.Region, time.Now())
+	_, err = si.signer.Sign(req, body, si.service, *si.cfg.Region, time.Now())
 	if err != nil {
 		// might need a response here
 		return nil, err
 	}
-	for k, vs := range headers {
-		req.Header.Del(k)
-		for _, v := range vs {
-			req.Header.Add(k, v)
-		}
-	}
+
 	log.Println(req)
 
 	// requestDump, err := httputil.DumpRequest(req, true)
