@@ -194,7 +194,7 @@ func buildSummaryMetric(name string, labels []*common.StringKeyValue, val []uint
 		values[i] = float64(val[2+i])
 	}
 	return &metrics.Metric{
-		MetricDescriptor: getDescriptor(name, monotonicInt64Comb, validCombinations),
+		MetricDescriptor: getDescriptor(name, summaryComb, validCombinations),
 		SummaryDataPoints: []*metrics.SummaryDataPoint{
 			getSummaryDataPoint(labels, uint64(time.Now().UnixNano()), sum, count, pcts, values),
 		},

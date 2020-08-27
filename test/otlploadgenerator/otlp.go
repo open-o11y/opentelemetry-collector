@@ -29,8 +29,7 @@ var (
 		counter,
 		gauge,
 		histogram,
-		// collector bug: summary metric received as MONOTIONIC_INT64
-		// summary,
+		summary,
 	}
 	labels = []string{ 						// each metric will have from 1 to 4 sets of labels
 		"label1 value1",
