@@ -29,7 +29,7 @@ var (
 		counter,
 		gauge,
 		histogram,
-		summary,
+		// summary,
 	}
 	labels = []string{ 						// each metric will have from 1 to 4 sets of labels
 		"label1 value1",
