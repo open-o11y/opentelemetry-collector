@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -78,7 +79,6 @@ func (prwe *prwExporter) shutdown(context.Context) error {
 // TimeSeries, validates and handles each individual metric, adding the converted TimeSeries to the map, and finally
 // exports the map.
 func (prwe *prwExporter) pushMetrics(ctx context.Context, md pdata.Metrics) (int, error) {
-
 	prwe.wg.Add(1)
 	defer prwe.wg.Done()
 	select {
@@ -91,10 +91,13 @@ func (prwe *prwExporter) pushMetrics(ctx context.Context, md pdata.Metrics) (int
 
 		resourceMetrics := data.MetricDataToOtlp(pdatautil.MetricsToInternalMetrics(md))
 		for _, resourceMetric := range resourceMetrics {
+			log.Println("94")
 			if resourceMetric == nil {
 				continue
 			}
+			log.Println("98")
 			for _, instMetrics := range resourceMetric.InstrumentationLibraryMetrics {
+				log.Println("100")
 				if instMetrics == nil {
 					continue
 				}
@@ -105,34 +108,43 @@ func (prwe *prwExporter) pushMetrics(ctx context.Context, md pdata.Metrics) (int
 					}
 					// check for valid type and temporality combination
 					if ok := validateMetrics(metric.MetricDescriptor); !ok {
-						dropped++
-						errs = append(errs, "invalid temporality and type combination")
-						continue
+						//dropped++
+						log.Println("invliad type and temp")
+						// errs = append(errs, "invalid temporality and type combination")
+						log.Println(metric.GetMetricDescriptor())
+						log.Println("temporality: " , metric.GetMetricDescriptor().GetTemporality())
 					}
 					// handle individual metric based on type
 					switch metric.GetMetricDescriptor().GetType() {
 					case otlp.MetricDescriptor_MONOTONIC_INT64, otlp.MetricDescriptor_INT64,
 						otlp.MetricDescriptor_MONOTONIC_DOUBLE, otlp.MetricDescriptor_DOUBLE:
 						if err := prwe.handleScalarMetric(tsMap, metric); err != nil {
+							log.Println(metric.GetMetricDescriptor().GetType())
 							errs = append(errs, err.Error())
 						}
 					case otlp.MetricDescriptor_HISTOGRAM:
 						if err := prwe.handleHistogramMetric(tsMap, metric); err != nil {
+							log.Println(metric.GetMetricDescriptor().GetType())
 							errs = append(errs, err.Error())
 						}
 					case otlp.MetricDescriptor_SUMMARY:
 						if err := prwe.handleSummaryMetric(tsMap, metric); err != nil {
+							log.Println(metric.GetMetricDescriptor().GetType())
 							errs = append(errs, err.Error())
 						}
+					default: {
+						log.Println("some how ended here")
+						log.Println(metric.GetMetricDescriptor().GetType())
+					}
 					}
 				}
 			}
 		}
 
 		if err := prwe.export(ctx, tsMap); err != nil {
+			log.Println(err)
 			return pdatautil.MetricCount(md), err
 		}
-
 		if dropped != 0 {
 			return dropped, errors.New(strings.Join(errs, "\n"))
 		}
@@ -342,7 +354,7 @@ func (prwe *prwExporter) export(ctx context.Context, tsMap map[string]*prompb.Ti
 	if err != nil {
 		return err
 	}
-
+	log.Println(httpResp)
 	//Only even status codes < 400 are okay
 	if httpResp.StatusCode/100 != 2 || httpResp.StatusCode >= 400 {
 		scanner := bufio.NewScanner(io.LimitReader(httpResp.Body, 256))
