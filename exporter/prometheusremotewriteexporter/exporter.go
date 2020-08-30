@@ -103,12 +103,7 @@ func (prwe *PrwExporter) PushMetrics(ctx context.Context, md pdata.Metrics) (int
 					if metric == nil {
 						continue
 					}
-					// check for valid type and temporality combination
-					if ok := validateMetrics(metric.MetricDescriptor); !ok {
-						dropped++
-						errs = append(errs, fmt.Errorf("invalid temporality and type combination"))
-						continue
-					}
+
 					// handle individual metric based on type
 					switch metric.GetMetricDescriptor().GetType() {
 					case otlp.MetricDescriptor_MONOTONIC_INT64, otlp.MetricDescriptor_INT64,

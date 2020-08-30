@@ -735,15 +735,6 @@ func Test_PushMetrics(t *testing.T) {
 			true,
 		},
 		{
-			"no_temp_case",
-			&noTempBatch,
-			nil,
-			0,
-			http.StatusAccepted,
-			pdatautil.MetricCount(noTempBatch),
-			true,
-		},
-		{
 			"http_error_case",
 			&noTempBatch,
 			nil,
