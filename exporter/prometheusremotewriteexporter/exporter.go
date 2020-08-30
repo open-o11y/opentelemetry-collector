@@ -237,6 +237,10 @@ func (prwe *PrwExporter) handleHistogramMetric(tsMap map[string]*prompb.TimeSeri
 
 		// process each bucket
 		for le, bk := range pt.GetBuckets() {
+			// this is here because the prometheus receiver generates one extra bucket but not the corresponding bound
+			if le >= len(pt.GetExplicitBounds()) {
+				continue
+			}
 			bucket := &prompb.Sample{
 				Value:     float64(bk.Count),
 				Timestamp: time,
