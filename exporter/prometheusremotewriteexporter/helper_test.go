@@ -15,6 +15,7 @@
 package prometheusremotewriteexporter
 
 import (
+	"go.opentelemetry.io/collector/consumer/pdata"
 	"strconv"
 	"testing"
 
@@ -22,16 +23,148 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	common "go.opentelemetry.io/collector/internal/data/opentelemetry-proto-gen/common/v1"
-	otlp "go.opentelemetry.io/collector/internal/data/opentelemetry-proto-gen/metrics/v1old"
+	otlp "go.opentelemetry.io/collector/internal/data/opentelemetry-proto-gen/metrics/v1"
 )
+var (
+	validMetrics   = []otlp.Metric{
+		{
+			Data:
+			&otlp.Metric_IntGauge{
+				IntGauge: &otlp.IntGauge{
+					DataPoints: []*otlp.IntDataPoint{
+						getIntDataPoint(lbs1,intVal1,time1),
+					},
+				},
+			},
+		},
+		{
+			Data:
+			&otlp.Metric_DoubleGauge{
+				DoubleGauge: &otlp.DoubleGauge{
+					DataPoints: []*otlp.DoubleDataPoint{
+						getDoubleDataPoint(lbs1,floatVal1,time1),
+					},
+				},
+			},
+		},
+		{
+			Data:
+			&otlp.Metric_IntSum{
+				IntSum: &otlp.IntSum{
+					DataPoints: []*otlp.IntDataPoint{
+						getIntDataPoint(lbs1,intVal1,time1),
+					},
+					AggregationTemporality:otlp.AggregationTemporality_AGGREGATION_TEMPORALITY_CUMULATIVE,
+				},
+			},
+		},
+		{
+			Data:
+			&otlp.Metric_DoubleSum{
+				DoubleSum: &otlp.DoubleSum{
+					DataPoints: []*otlp.DoubleDataPoint{
+						getDoubleDataPoint(lbs1,floatVal1,time1),
+					},
+					AggregationTemporality:otlp.AggregationTemporality_AGGREGATION_TEMPORALITY_CUMULATIVE,
+				},
+			},
+		},
+		{
+			Data:
+			&otlp.Metric_IntHistogram{
+				IntHistogram: &otlp.IntHistogram{
+					DataPoints: []*otlp.IntHistogramDataPoint{
+						getIntHistogramDataPoint(lbs1, time1, floatVal1, uint64(intVal1), bounds, buckets),
+					},
+					AggregationTemporality:otlp.AggregationTemporality_AGGREGATION_TEMPORALITY_CUMULATIVE,
+				},
+			},
+		},
+		{
+			Data:
+			&otlp.Metric_DoubleHistogram{
+				DoubleHistogram: &otlp.DoubleHistogram{
+					DataPoints: []*otlp.DoubleHistogramDataPoint{
+						getDoubleHistogramDataPoint(lbs1, time1, floatVal1, uint64(intVal1), bounds, buckets),
+					},
+					AggregationTemporality:otlp.AggregationTemporality_AGGREGATION_TEMPORALITY_CUMULATIVE,
+				},
+			},
+		},
+	}
 
+	// different metrics that will cause error
+	invalidCombinations = []otlp.Metric{
+		// Category 1: type and data field doesn't match
+		{
+			Data:
+			&otlp.Metric_IntGauge{},
+		},
+		{
+			Data:
+			&otlp.Metric_DoubleGauge{},
+		},
+		{
+			Data:
+			&otlp.Metric_IntSum{},
+		},
+		{
+			Data:
+			&otlp.Metric_DoubleSum{},
+		},
+		{
+			Data:
+			&otlp.Metric_IntHistogram{},
+		},
+		{
+			Data:
+			&otlp.Metric_DoubleHistogram{},
+		},
+		//Category 2: invalid type and temporality combination
+		{
+			Data: &otlp.Metric_IntSum{
+				IntSum:
+					&otlp.IntSum{
+					AggregationTemporality: otlp.AggregationTemporality_AGGREGATION_TEMPORALITY_DELTA,
+				},
+			},
+		},
+		{
+			Data: &otlp.Metric_DoubleSum{
+				DoubleSum:
+				&otlp.DoubleSum{
+					AggregationTemporality: otlp.AggregationTemporality_AGGREGATION_TEMPORALITY_DELTA,
+				},
+			},
+		},	{
+			Data: &otlp.Metric_IntHistogram{
+				IntHistogram:
+				&otlp.IntHistogram{
+					AggregationTemporality: otlp.AggregationTemporality_AGGREGATION_TEMPORALITY_DELTA,
+				},
+			},
+		},
+		{
+			Data: &otlp.Metric_DoubleHistogram{
+				DoubleHistogram:
+				&otlp.DoubleHistogram{
+					AggregationTemporality: otlp.AggregationTemporality_AGGREGATION_TEMPORALITY_DELTA,
+				},
+			},
+		},
+	}
+
+
+
+})
 // Test_validateMetrics checks validateMetrics return true if a type and temporality combination is valid, false
 // otherwise.
 func Test_validateMetrics(t *testing.T) {
+
 	// define a single test
 	type combTest struct {
 		name string
-		desc *otlp.MetricDescriptor
+		metric *otlp.Metric
 		want bool
 	}
 
@@ -40,30 +173,32 @@ func Test_validateMetrics(t *testing.T) {
 	// append true cases
 	for i := range validCombinations {
 		name := "valid_" + strconv.Itoa(i)
-		desc := getDescriptor(name, i, validCombinations)
+		validMetric := &otlp.Metric{
+			Name:        name,
+			Data:
+				&otlp.Metric_IntGauge{
+				IntGauge:&otlp.IntGauge{
+					DataPoints: []*otlp.IntDataPoint {
+							getIntDataPoint(nil,intVal1,time1),
+					},
+				},
+			},
+		}
+
 		tests = append(tests, combTest{
 			name,
-			desc,
+			validMetric,
 			true,
 		})
 	}
-	// append false cases
-	for i := range invalidCombinations {
-		name := "invalid_" + strconv.Itoa(i)
-		desc := getDescriptor(name, i, invalidCombinations)
-		tests = append(tests, combTest{
-			name,
-			desc,
-			false,
-		})
-	}
+
 	// append nil case
 	tests = append(tests, combTest{"invalid_nil", nil, false})
 
 	// run tests
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := validateMetrics(tt.desc)
+			got := validateMetrics(tt.metric)
 			assert.Equal(t, tt.want, got)
 		})
 	}
@@ -237,7 +372,7 @@ func Test_createLabelSet(t *testing.T) {
 func Test_getPromMetricName(t *testing.T) {
 	tests := []struct {
 		name string
-		desc *otlp.MetricDescriptor
+		metric *otlp.Metric
 		ns   string
 		want string
 	}{
@@ -278,5 +413,4 @@ func Test_getPromMetricName(t *testing.T) {
 			assert.Equal(t, tt.want, getPromMetricName(tt.desc, tt.ns))
 		})
 	}
-
 }
