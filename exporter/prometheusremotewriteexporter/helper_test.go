@@ -15,372 +15,16 @@
 package prometheusremotewriteexporter
 
 import (
-	"go.opentelemetry.io/collector/consumer/pdata"
-	common "go.opentelemetry.io/collector/internal/data/opentelemetry-proto-gen/common/v1"
 	"strconv"
 	"testing"
 
 	"github.com/prometheus/prometheus/prompb"
 	"github.com/stretchr/testify/assert"
 
-	//common "go.opentelemetry.io/collector/internal/data/opentelemetry-proto-gen/common/v1"
+	"go.opentelemetry.io/collector/consumer/pdata"
+	common "go.opentelemetry.io/collector/internal/data/opentelemetry-proto-gen/common/v1"
 	otlp "go.opentelemetry.io/collector/internal/data/opentelemetry-proto-gen/metrics/v1"
 )
-
-var (
-	validIntGauge = "valid_IntGauge"
-	validDoubleGauge = "valid_DoubleGauge"
-	validIntSum = "valid_IntSum"
-	validDoubleSum ="valid_DoubleSum"
-	validIntHistogram ="valid_IntHistogram"
-	validDoubleHistogram = "valid_DoubleHistogram"
-
-	validIntGaugeDirty = "*valid_IntGauge$"
-
-	unmatchedBoundBucketIntHist = "unmatchedBoundBucketIntHist"
-	unmatchedBoundBucketDoubleHist = "unmatchedBoundBucketDoubleHist"
-
-	// valid metrics as input should not return error
-	validMetrics1   = map[string]*otlp.Metric{
-		validIntGauge:{
-			Name: validIntGauge,
-			Data:
-			&otlp.Metric_IntGauge{
-				IntGauge: &otlp.IntGauge{
-					DataPoints: []*otlp.IntDataPoint{
-						getIntDataPoint(lbs1,intVal1,time1),
-						nil,
-					},
-				},
-			},
-		},
-		validDoubleGauge:{
-			Name: validDoubleGauge,
-			Data:
-			&otlp.Metric_DoubleGauge{
-				DoubleGauge: &otlp.DoubleGauge{
-					DataPoints: []*otlp.DoubleDataPoint{
-						getDoubleDataPoint(lbs1,floatVal1,time1),
-						nil,
-					},
-				},
-			},
-		},
-		validIntSum:{
-			Name: validIntSum,
-			Data:
-			&otlp.Metric_IntSum{
-				IntSum: &otlp.IntSum{
-					DataPoints: []*otlp.IntDataPoint{
-						getIntDataPoint(lbs1,intVal1,time1),
-						nil,
-					},
-					AggregationTemporality:otlp.AggregationTemporality_AGGREGATION_TEMPORALITY_CUMULATIVE,
-				},
-			},
-		},
-		validDoubleSum: {
-			Name: validDoubleSum,
-			Data:
-			&otlp.Metric_DoubleSum{
-				DoubleSum: &otlp.DoubleSum{
-					DataPoints: []*otlp.DoubleDataPoint{
-						getDoubleDataPoint(lbs1,floatVal1,time1),
-						nil,
-					},
-					AggregationTemporality:otlp.AggregationTemporality_AGGREGATION_TEMPORALITY_CUMULATIVE,
-				},
-			},
-		},
-		validIntHistogram: {
-			Name: validIntHistogram,
-			Data:
-			&otlp.Metric_IntHistogram{
-				IntHistogram: &otlp.IntHistogram{
-					DataPoints: []*otlp.IntHistogramDataPoint{
-						getIntHistogramDataPoint(lbs1, time1, floatVal1, uint64(intVal1), bounds, buckets),
-						nil,
-					},
-					AggregationTemporality:otlp.AggregationTemporality_AGGREGATION_TEMPORALITY_CUMULATIVE,
-				},
-			},
-		},
-		validDoubleHistogram:{
-			Name: validDoubleHistogram,
-			Data:
-			&otlp.Metric_DoubleHistogram{
-				DoubleHistogram: &otlp.DoubleHistogram{
-					DataPoints: []*otlp.DoubleHistogramDataPoint{
-						getDoubleHistogramDataPoint(lbs1, time1, floatVal1, uint64(intVal1), bounds, buckets),
-						nil,
-					},
-					AggregationTemporality:otlp.AggregationTemporality_AGGREGATION_TEMPORALITY_CUMULATIVE,
-				},
-			},
-		},
-	}
-	validMetrics2   = map[string]*otlp.Metric{
-		validIntGauge:{
-			Name: validIntGauge,
-			Data:
-			&otlp.Metric_IntGauge{
-				IntGauge: &otlp.IntGauge{
-					DataPoints: []*otlp.IntDataPoint{
-						getIntDataPoint(lbs2,intVal2,time2),
-					},
-				},
-			},
-		},
-		validDoubleGauge:{
-			Name: validDoubleGauge,
-			Data:
-			&otlp.Metric_DoubleGauge{
-				DoubleGauge: &otlp.DoubleGauge{
-					DataPoints: []*otlp.DoubleDataPoint{
-						getDoubleDataPoint(lbs2,floatVal2,time2),
-					},
-				},
-			},
-		},
-		validIntSum:{
-			Name: validIntSum,
-			Data:
-			&otlp.Metric_IntSum{
-				IntSum: &otlp.IntSum{
-					DataPoints: []*otlp.IntDataPoint{
-						getIntDataPoint(lbs2,intVal2,time2),
-					},
-					AggregationTemporality:otlp.AggregationTemporality_AGGREGATION_TEMPORALITY_CUMULATIVE,
-				},
-			},
-		},
-		validDoubleSum: {
-			Name: validDoubleSum,
-			Data:
-			&otlp.Metric_DoubleSum{
-				DoubleSum: &otlp.DoubleSum{
-					DataPoints: []*otlp.DoubleDataPoint{
-						getDoubleDataPoint(lbs2,floatVal2,time2),
-					},
-					AggregationTemporality:otlp.AggregationTemporality_AGGREGATION_TEMPORALITY_CUMULATIVE,
-				},
-			},
-		},
-		validIntHistogram: {
-			Name: validIntHistogram,
-			Data:
-			&otlp.Metric_IntHistogram{
-				IntHistogram: &otlp.IntHistogram{
-					DataPoints: []*otlp.IntHistogramDataPoint{
-						getIntHistogramDataPoint(lbs2, time2, floatVal2, uint64(intVal2), bounds, buckets),
-					},
-					AggregationTemporality:otlp.AggregationTemporality_AGGREGATION_TEMPORALITY_CUMULATIVE,
-				},
-			},
-		},
-		validDoubleHistogram:{
-			Name: validDoubleHistogram,
-			Data:
-			&otlp.Metric_DoubleHistogram{
-				DoubleHistogram: &otlp.DoubleHistogram{
-					DataPoints: []*otlp.DoubleHistogramDataPoint{
-						getDoubleHistogramDataPoint(lbs2, time2, floatVal2, uint64(intVal2), bounds, buckets),
-					},
-					AggregationTemporality:otlp.AggregationTemporality_AGGREGATION_TEMPORALITY_CUMULATIVE,
-				},
-			},
-		},
-		validIntGaugeDirty:{
-			Name: validIntGaugeDirty,
-			Data:
-			&otlp.Metric_IntGauge{
-				IntGauge: &otlp.IntGauge{
-					DataPoints: []*otlp.IntDataPoint{
-						getIntDataPoint(lbs1,intVal1,time1),
-						nil,
-					},
-				},
-			},
-		},
-		unmatchedBoundBucketIntHist: {
-			Name: unmatchedBoundBucketIntHist,
-			Data:
-			&otlp.Metric_IntHistogram{
-				IntHistogram: &otlp.IntHistogram{
-					DataPoints: []*otlp.IntHistogramDataPoint{
-						{
-							ExplicitBounds:[]float64{0.1,0.2,0.3},
-							BucketCounts:[]uint64{1,2},
-						},
-					},
-					AggregationTemporality:otlp.AggregationTemporality_AGGREGATION_TEMPORALITY_CUMULATIVE,
-				},
-			},
-		},
-		unmatchedBoundBucketDoubleHist: {
-			Name:unmatchedBoundBucketDoubleHist,
-			Data:
-			&otlp.Metric_DoubleHistogram{
-				DoubleHistogram: &otlp.DoubleHistogram{
-					DataPoints: []*otlp.DoubleHistogramDataPoint{
-						{
-							ExplicitBounds:[]float64{0.1,0.2,0.3},
-							BucketCounts:[]uint64{1,2},
-						},
-					},
-					AggregationTemporality:otlp.AggregationTemporality_AGGREGATION_TEMPORALITY_CUMULATIVE,
-				},
-			},
-		},
-	}
-
-	nilMetric = "nil"
-	empty = "empty"
-
-	// Category 1: type and data field doesn't match
-	notMatchIntGauge = "noMatchIntGauge"
-	notMatchDoubleGauge = "notMatchDoubleGauge"
-	notMatchIntSum = "notMatchIntSum"
-	notMatchDoubleSum = "notMatchDoubleSum"
-	notMatchIntHistogram = "notMatchIntHistogram"
-	notMatchDoubleHistogram = "notMatchDoubleHistogram"
-
-	// Category 2: invalid type and temporality combination
-	invalidIntSum = "invalidIntSum"
-	invalidDoubleSum = "invalidDoubleSum"
-	invalidIntHistogram = "invalidIntHistogram"
-	invalidDoubleHistogram = "invalidDoubleHistogram"
-
-	//Category 3: nil data points
-	nilDataPointIntGauge = "nilDataPointIntGauge"
-	nilDataPointDoubleGauge = "nilDataPointDoubleGauge"
-	nilDataPointIntSum = "nilDataPointIntSum"
-	nilDataPointDoubleSum = "nilDataPointDoubleSum"
-	nilDataPointIntHistogram = "nilDataPointIntHistogram"
-	nilDataPointDoubleHistogram = "nilDataPointDoubleHistogram"
-
-	// different metrics that will not pass validate metrics
-	invalidMetrics = map[string]*otlp.Metric{
-		// nil
-		nilMetric: nil,
-		// Data = nil
-		empty: {},
-		notMatchIntGauge: {
-			Name: notMatchIntGauge,
-			Data: &otlp.Metric_IntGauge{},
-		},
-		notMatchDoubleGauge: {
-			Name: notMatchDoubleGauge,
-			Data: &otlp.Metric_DoubleGauge{},
-		},
-		notMatchIntSum: {
-			Name: notMatchIntSum,
-			Data: &otlp.Metric_IntSum{},
-		},
-		notMatchDoubleSum: {
-			Name: notMatchDoubleSum,
-			Data: &otlp.Metric_DoubleSum{},
-		},
-		notMatchIntHistogram: {
-			Name: notMatchIntHistogram,
-			Data: &otlp.Metric_IntHistogram{},
-		},
-		notMatchDoubleHistogram: {
-			Name: notMatchDoubleHistogram,
-			Data: &otlp.Metric_DoubleHistogram{},
-		},
-		invalidIntSum: {
-			Name: invalidIntSum,
-			Data: &otlp.Metric_IntSum{
-				IntSum:
-					&otlp.IntSum{
-					AggregationTemporality: otlp.AggregationTemporality_AGGREGATION_TEMPORALITY_DELTA,
-				},
-			},
-		},
-		invalidDoubleSum: {
-			Name: invalidDoubleSum,
-			Data: &otlp.Metric_DoubleSum{
-				DoubleSum:
-				&otlp.DoubleSum{
-					AggregationTemporality: otlp.AggregationTemporality_AGGREGATION_TEMPORALITY_DELTA,
-				},
-			},
-		},
-		invalidIntHistogram: {
-			Name: invalidIntHistogram,
-			Data: &otlp.Metric_IntHistogram{
-				IntHistogram:
-				&otlp.IntHistogram{
-					AggregationTemporality: otlp.AggregationTemporality_AGGREGATION_TEMPORALITY_DELTA,
-				},
-			},
-		},
-		invalidDoubleHistogram: {
-			Name: invalidDoubleHistogram,
-			Data: &otlp.Metric_DoubleHistogram{
-				DoubleHistogram:
-				&otlp.DoubleHistogram{
-					AggregationTemporality: otlp.AggregationTemporality_AGGREGATION_TEMPORALITY_DELTA,
-				},
-			},
-		},
-	}
-
-	// different metrics that will cause the exporter to return an error
-	errorMetrics = map[string]*otlp.Metric{
-
-		nilDataPointIntGauge: {
-			Name: nilDataPointIntGauge,
-			Data: &otlp.Metric_IntGauge{
-				IntGauge: &otlp.IntGauge{DataPoints:nil},
-			},
-		},
-		nilDataPointDoubleGauge: {
-			Name: nilDataPointDoubleGauge,
-			Data: &otlp.Metric_DoubleGauge{
-				DoubleGauge: &otlp.DoubleGauge{DataPoints:nil},
-			},
-		},
-		nilDataPointIntSum: {
-			Name: nilDataPointIntSum,
-			Data: &otlp.Metric_IntSum{
-				IntSum: &otlp.IntSum{
-					DataPoints:nil,
-					AggregationTemporality:otlp.AggregationTemporality_AGGREGATION_TEMPORALITY_CUMULATIVE,
-				},
-			},
-		},
-		nilDataPointDoubleSum: {
-			Name: nilDataPointDoubleSum,
-			Data: &otlp.Metric_DoubleSum{
-				DoubleSum: &otlp.DoubleSum{
-					DataPoints:nil,
-					AggregationTemporality:otlp.AggregationTemporality_AGGREGATION_TEMPORALITY_CUMULATIVE,
-				},
-			},
-		},
-		nilDataPointIntHistogram: {
-			Name: nilDataPointIntHistogram,
-			Data: &otlp.Metric_IntHistogram{
-				IntHistogram: &otlp.IntHistogram{
-					DataPoints:nil,
-					AggregationTemporality:otlp.AggregationTemporality_AGGREGATION_TEMPORALITY_CUMULATIVE,
-				},
-			},
-		},
-		nilDataPointDoubleHistogram: {
-			Name: nilDataPointDoubleHistogram,
-			Data: &otlp.Metric_DoubleHistogram{
-				DoubleHistogram: &otlp.DoubleHistogram{
-					DataPoints:nil,
-					AggregationTemporality:otlp.AggregationTemporality_AGGREGATION_TEMPORALITY_CUMULATIVE,
-				},
-			},
-		},
-
-	}
-	)
 
 // Test_validateMetrics checks validateMetrics return true if a type and temporality combination is valid, false
 // otherwise.
@@ -388,9 +32,9 @@ func Test_validateMetrics(t *testing.T) {
 
 	// define a single test
 	type combTest struct {
-		name string
+		name   string
 		metric *otlp.Metric
-		want bool
+		want   bool
 	}
 
 	tests := []combTest{}
@@ -434,7 +78,7 @@ func Test_validateMetrics(t *testing.T) {
 // case.
 func Test_addSample(t *testing.T) {
 	type testCase struct {
-		metric   *otlp.Metric
+		metric *otlp.Metric
 		sample prompb.Sample
 		labels []prompb.Label
 	}
@@ -496,10 +140,10 @@ func Test_addSample(t *testing.T) {
 // metric type combination.
 func Test_timeSeriesSignature(t *testing.T) {
 	tests := []struct {
-		name string
-		lbs  []prompb.Label
+		name   string
+		lbs    []prompb.Label
 		metric *otlp.Metric
-		want string
+		want   string
 	}{
 		{
 			"int64_signature",
@@ -595,10 +239,10 @@ func Test_createLabelSet(t *testing.T) {
 // invalid characters.
 func Test_getPromMetricName(t *testing.T) {
 	tests := []struct {
-		name string
+		name   string
 		metric *otlp.Metric
-		ns   string
-		want string
+		ns     string
+		want   string
 	}{
 		{
 			"nil_case",
@@ -628,7 +272,7 @@ func Test_getPromMetricName(t *testing.T) {
 			"dirty_string",
 			validMetrics2[validIntGaugeDirty],
 			"7" + ns1,
-			"key_7test_ns__"+ validIntGauge + "_",
+			"key_7test_ns__" + validIntGauge + "_",
 		},
 	}
 	// run tests

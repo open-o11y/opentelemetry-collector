@@ -1,4 +1,3 @@
-
 // Copyright The OpenTelemetry Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,9 +16,6 @@ package prometheusremotewriteexporter
 
 import (
 	"context"
-	"go.opentelemetry.io/collector/consumer/pdata"
-	"go.opentelemetry.io/collector/internal/data"
-	otlp "go.opentelemetry.io/collector/internal/data/opentelemetry-proto-gen/metrics/v1"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -35,8 +31,11 @@ import (
 
 	"go.opentelemetry.io/collector/config/confighttp"
 	"go.opentelemetry.io/collector/config/configmodels"
+	"go.opentelemetry.io/collector/consumer/pdata"
 	"go.opentelemetry.io/collector/consumer/pdatautil"
 	"go.opentelemetry.io/collector/exporter/exporterhelper"
+	"go.opentelemetry.io/collector/internal/data"
+	otlp "go.opentelemetry.io/collector/internal/data/opentelemetry-proto-gen/metrics/v1"
 	"go.opentelemetry.io/collector/internal/data/testdata"
 )
 
@@ -261,7 +260,7 @@ func Test_pushMetrics(t *testing.T) {
 		{
 			InstrumentationLibraryMetrics: []*otlp.InstrumentationLibraryMetrics{
 				{
-					Metrics:[]*otlp.Metric{
+					Metrics: []*otlp.Metric{
 						validMetrics1[validDoubleSum],
 						validMetrics2[validDoubleSum],
 					},
@@ -275,7 +274,7 @@ func Test_pushMetrics(t *testing.T) {
 		{
 			InstrumentationLibraryMetrics: []*otlp.InstrumentationLibraryMetrics{
 				{
-					Metrics:[]*otlp.Metric{
+					Metrics: []*otlp.Metric{
 						validMetrics1[validIntGauge],
 						validMetrics2[validIntGauge],
 					},
@@ -289,7 +288,7 @@ func Test_pushMetrics(t *testing.T) {
 		{
 			InstrumentationLibraryMetrics: []*otlp.InstrumentationLibraryMetrics{
 				{
-					Metrics:[]*otlp.Metric{
+					Metrics: []*otlp.Metric{
 						validMetrics1[validDoubleGauge],
 						validMetrics2[validDoubleGauge],
 					},
@@ -303,7 +302,7 @@ func Test_pushMetrics(t *testing.T) {
 		{
 			InstrumentationLibraryMetrics: []*otlp.InstrumentationLibraryMetrics{
 				{
-					Metrics:[]*otlp.Metric{
+					Metrics: []*otlp.Metric{
 						validMetrics1[validIntHistogram],
 						validMetrics2[validIntHistogram],
 					},
@@ -317,7 +316,7 @@ func Test_pushMetrics(t *testing.T) {
 		{
 			InstrumentationLibraryMetrics: []*otlp.InstrumentationLibraryMetrics{
 				{
-					Metrics:[]*otlp.Metric{
+					Metrics: []*otlp.Metric{
 						validMetrics1[validDoubleHistogram],
 						validMetrics2[validDoubleHistogram],
 					},
@@ -328,32 +327,32 @@ func Test_pushMetrics(t *testing.T) {
 	doubleHistogramBatch := pdatautil.MetricsFromInternalMetrics(data.MetricDataFromOtlp(doubleHistogramMetric))
 
 	// len(BucketCount) > len(ExplicitBounds)
-	unmatchedBoundBucketIntHistMetric :=  []*otlp.ResourceMetrics{
+	unmatchedBoundBucketIntHistMetric := []*otlp.ResourceMetrics{
 		{
 			InstrumentationLibraryMetrics: []*otlp.InstrumentationLibraryMetrics{
 				{
-					Metrics:[]*otlp.Metric{
+					Metrics: []*otlp.Metric{
 						validMetrics2[unmatchedBoundBucketIntHist],
 					},
 				},
 			},
 		},
 	}
-	unmatchedBoundBucketIntHistBatch :=  pdatautil.MetricsFromInternalMetrics(
+	unmatchedBoundBucketIntHistBatch := pdatautil.MetricsFromInternalMetrics(
 		data.MetricDataFromOtlp(unmatchedBoundBucketIntHistMetric))
 
-	unmatchedBoundBucketDoubleHistMetric :=  []*otlp.ResourceMetrics{
+	unmatchedBoundBucketDoubleHistMetric := []*otlp.ResourceMetrics{
 		{
 			InstrumentationLibraryMetrics: []*otlp.InstrumentationLibraryMetrics{
 				{
-					Metrics:[]*otlp.Metric{
+					Metrics: []*otlp.Metric{
 						validMetrics2[unmatchedBoundBucketDoubleHist],
 					},
 				},
 			},
 		},
 	}
-	unmatchedBoundBucketDoubleHistBatch :=  pdatautil.MetricsFromInternalMetrics(
+	unmatchedBoundBucketDoubleHistBatch := pdatautil.MetricsFromInternalMetrics(
 		data.MetricDataFromOtlp(unmatchedBoundBucketDoubleHistMetric))
 
 	// fail cases
@@ -361,7 +360,7 @@ func Test_pushMetrics(t *testing.T) {
 		{
 			InstrumentationLibraryMetrics: []*otlp.InstrumentationLibraryMetrics{
 				{
-					Metrics:[]*otlp.Metric{
+					Metrics: []*otlp.Metric{
 						errorMetrics[nilDataPointIntGauge],
 					},
 				},
@@ -375,7 +374,7 @@ func Test_pushMetrics(t *testing.T) {
 		{
 			InstrumentationLibraryMetrics: []*otlp.InstrumentationLibraryMetrics{
 				{
-					Metrics:[]*otlp.Metric{
+					Metrics: []*otlp.Metric{
 						errorMetrics[nilDataPointDoubleGauge],
 					},
 				},
@@ -389,7 +388,7 @@ func Test_pushMetrics(t *testing.T) {
 		{
 			InstrumentationLibraryMetrics: []*otlp.InstrumentationLibraryMetrics{
 				{
-					Metrics:[]*otlp.Metric{
+					Metrics: []*otlp.Metric{
 						errorMetrics[nilDataPointIntSum],
 					},
 				},
@@ -402,7 +401,7 @@ func Test_pushMetrics(t *testing.T) {
 		{
 			InstrumentationLibraryMetrics: []*otlp.InstrumentationLibraryMetrics{
 				{
-					Metrics:[]*otlp.Metric{
+					Metrics: []*otlp.Metric{
 						errorMetrics[nilDataPointDoubleSum],
 					},
 				},
@@ -416,7 +415,7 @@ func Test_pushMetrics(t *testing.T) {
 		{
 			InstrumentationLibraryMetrics: []*otlp.InstrumentationLibraryMetrics{
 				{
-					Metrics:[]*otlp.Metric{
+					Metrics: []*otlp.Metric{
 						errorMetrics[nilDataPointIntHistogram],
 					},
 				},
@@ -430,7 +429,7 @@ func Test_pushMetrics(t *testing.T) {
 		{
 			InstrumentationLibraryMetrics: []*otlp.InstrumentationLibraryMetrics{
 				{
-					Metrics:[]*otlp.Metric{
+					Metrics: []*otlp.Metric{
 						errorMetrics[nilDataPointDoubleHistogram],
 					},
 				},
@@ -674,5 +673,6 @@ func Test_pushMetrics(t *testing.T) {
 		})
 	}
 }
+
 /*
-*/
+ */

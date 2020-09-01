@@ -23,10 +23,9 @@ import (
 	"time"
 	"unicode"
 
-	"go.opentelemetry.io/collector/consumer/pdata"
-
 	"github.com/prometheus/prometheus/prompb"
 
+	"go.opentelemetry.io/collector/consumer/pdata"
 	common "go.opentelemetry.io/collector/internal/data/opentelemetry-proto-gen/common/v1"
 	otlp "go.opentelemetry.io/collector/internal/data/opentelemetry-proto-gen/metrics/v1"
 )
@@ -286,7 +285,7 @@ func addSingleDoubleDataPoint(pt *otlp.DoubleDataPoint, metric *otlp.Metric, nam
 	name := getPromMetricName(metric, namespace)
 	labels := createLabelSet(pt.GetLabels(), nameStr, name)
 	sample := &prompb.Sample{
-		Value: float64(pt.Value),
+		Value: pt.Value,
 		// convert ns to ms
 		Timestamp: convertTimeStamp(pt.TimeUnixNano),
 	}
@@ -365,6 +364,7 @@ func addSingleIntHistogramDataPoint(pt *otlp.IntHistogramDataPoint, metric *otlp
 	infLabels := createLabelSet(pt.GetLabels(), nameStr, baseName+bucketStr, leStr, pInfStr)
 	addSample(tsMap, infBucket, infLabels, metric)
 }
+
 // addSingleDoubleHistogramDataPoint converts pt to 2 + min(len(ExplicitBounds), len(BucketCount)) + 1 samples. It
 //// ignore extra buckets if len(ExplicitBounds) > len(BucketCounts)
 func addSingleDoubleHistogramDataPoint(pt *otlp.DoubleHistogramDataPoint, metric *otlp.Metric, namespace string,
@@ -377,7 +377,7 @@ func addSingleDoubleHistogramDataPoint(pt *otlp.DoubleHistogramDataPoint, metric
 	baseName := getPromMetricName(metric, namespace)
 	// treat sum as a sample in an individual TimeSeries
 	sum := &prompb.Sample{
-		Value:     float64(pt.GetSum()),
+		Value:     pt.GetSum(),
 		Timestamp: time,
 	}
 
