@@ -53,6 +53,9 @@ func (a ByLabelName) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 // validateMetrics returns a bool representing whether the metric has a valid type and temporality combination and a
 // matching metric type and field
 func validateMetrics(metric *otlp.Metric) bool {
+	if metric == nil || metric.Data == nil {
+		return false
+	}
 	switch metric.Data.(type) {
 	case *otlp.Metric_DoubleGauge:
 		return metric.GetDoubleGauge() != nil
@@ -308,6 +311,8 @@ func addSingleIntDataPoint(pt *otlp.IntDataPoint, metric *otlp.Metric, namespace
 	addSample(tsMap, sample, labels, metric)
 }
 
+// addSingleIntHistogramDataPoint converts pt to 2 + min(len(ExplicitBounds), len(BucketCount)) + 1 samples. It
+// ignore extra buckets if len(ExplicitBounds) > len(BucketCounts)
 func addSingleIntHistogramDataPoint(pt *otlp.IntHistogramDataPoint, metric *otlp.Metric, namespace string,
 	tsMap map[string]*prompb.TimeSeries) {
 	if pt == nil {
@@ -336,7 +341,7 @@ func addSingleIntHistogramDataPoint(pt *otlp.IntHistogramDataPoint, metric *otlp
 	// count for +Inf bound
 	var totalCount uint64
 
-	// process each bucket
+	// process each bound, ignore extra bucket values
 	for index, bound := range pt.GetExplicitBounds() {
 		if index >= len(pt.GetBucketCounts()) {
 			break
@@ -360,8 +365,9 @@ func addSingleIntHistogramDataPoint(pt *otlp.IntHistogramDataPoint, metric *otlp
 	infLabels := createLabelSet(pt.GetLabels(), nameStr, baseName+bucketStr, leStr, pInfStr)
 	addSample(tsMap, infBucket, infLabels, metric)
 }
-
-func addSingleDoubleHistogramDataPoint(pt *otlp.IntHistogramDataPoint, metric *otlp.Metric, namespace string,
+// addSingleDoubleHistogramDataPoint converts pt to 2 + min(len(ExplicitBounds), len(BucketCount)) + 1 samples. It
+//// ignore extra buckets if len(ExplicitBounds) > len(BucketCounts)
+func addSingleDoubleHistogramDataPoint(pt *otlp.DoubleHistogramDataPoint, metric *otlp.Metric, namespace string,
 	tsMap map[string]*prompb.TimeSeries) {
 	if pt == nil {
 		return
@@ -389,7 +395,7 @@ func addSingleDoubleHistogramDataPoint(pt *otlp.IntHistogramDataPoint, metric *o
 	// count for +Inf bound
 	var totalCount uint64
 
-	// process each bucket
+	// process each bound, ignore extra bucket values
 	for index, bound := range pt.GetExplicitBounds() {
 		if index >= len(pt.GetBucketCounts()) {
 			break

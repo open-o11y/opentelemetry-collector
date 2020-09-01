@@ -17,8 +17,6 @@ package prometheusremotewriteexporter
 import (
 	"time"
 
-	data "google.golang.org/genproto/googleapis/analytics/data/v1alpha"
-
 	"github.com/prometheus/prometheus/prompb"
 
 	commonpb "go.opentelemetry.io/collector/internal/data/opentelemetry-proto-gen/common/v1"
@@ -30,12 +28,6 @@ var (
 	time2   = uint64(time.Date(1970, 1, 0, 0, 0, 0, 0, time.UTC).UnixNano())
 	msTime1 = int64(time1 / uint64(int64(time.Millisecond)/int64(time.Nanosecond)))
 	msTime2 = int64(time2 / uint64(int64(time.Millisecond)/int64(time.Nanosecond)))
-
-	typeInt64           = "INT64"
-	typeMonotonicInt64  = "MONOTONIC_INT64"
-	typeMonotonicDouble = "MONOTONIC_DOUBLE"
-	typeHistogram       = "HISTOGRAM"
-	typeSummary         = "SUMMARY"
 
 	label11 = "test_label11"
 	value11 = "test_value11"
@@ -69,20 +61,15 @@ var (
 	ns1    = "test_ns"
 	name1  = "valid_single_int_point"
 
-	monotonicInt64Comb  = 0
-	monotonicDoubleComb = 1
-	histogramComb       = 2
-	summaryComb         = 3
-
 	twoPointsSameTs = map[string]*prompb.TimeSeries{
-		typeInt64 + "-" + label11 + "-" + value11 + "-" + label12 + "-" + value12: getTimeSeries(getPromLabels(label11, value11, label12, value12),
+		"2" + "-" + label11 + "-" + value11 + "-" + label12 + "-" + value12: getTimeSeries(getPromLabels(label11, value11, label12, value12),
 			getSample(float64(intVal1), msTime1),
 			getSample(float64(intVal2), msTime2)),
 	}
 	twoPointsDifferentTs = map[string]*prompb.TimeSeries{
-		typeInt64 + "-" + label11 + "-" + value11 + "-" + label12 + "-" + value12: getTimeSeries(getPromLabels(label11, value11, label12, value12),
+		"1" + "-" + label11 + "-" + value11 + "-" + label12 + "-" + value12: getTimeSeries(getPromLabels(label11, value11, label12, value12),
 			getSample(float64(intVal1), msTime1)),
-		typeInt64 + "-" + label21 + "-" + value21 + "-" + label22 + "-" + value22: getTimeSeries(getPromLabels(label21, value21, label22, value22),
+		"1" + "-" + label21 + "-" + value21 + "-" + label22 + "-" + value22: getTimeSeries(getPromLabels(label21, value21, label22, value22),
 			getSample(float64(intVal1), msTime2)),
 	}
 	bounds  = []float64{0.1, 0.5, 0.99}
@@ -176,8 +163,4 @@ func getTimeSeries(labels []prompb.Label, samples ...prompb.Sample) *prompb.Time
 		Labels:  labels,
 		Samples: samples,
 	}
-}
-
-func getMetric(name string, mType data.Type, temp otlp.AggregationTemporality) {
-	data.Metric{}
 }

@@ -34,6 +34,7 @@ import (
 	"go.opentelemetry.io/collector/consumer/pdata"
 	"go.opentelemetry.io/collector/consumer/pdatautil"
 	"go.opentelemetry.io/collector/internal/data"
+	otlp "go.opentelemetry.io/collector/internal/data/opentelemetry-proto-gen/metrics/v1"
 )
 
 // prwExporter converts OTLP metrics to Prometheus remote write TimeSeries and sends them to a remote endpoint
@@ -102,9 +103,10 @@ func (prwe *prwExporter) pushMetrics(ctx context.Context, md pdata.Metrics) (int
 				// TODO: decide if instrumentation library information should be exported as labels
 				for _, metric := range instrumentationMetrics.Metrics {
 					if metric == nil {
+						dropped++
 						continue
 					}
-					// check for valid type and temporality combination and matching data field and type
+					// check for valid type and temporality combination and for matching data field and type
 					if ok := validateMetrics(metric); !ok {
 						dropped++
 						errs = append(errs, errors.New("invalid temporality and type combination"))
@@ -151,27 +153,35 @@ func (prwe *prwExporter) handleScalarMetric(tsMap map[string]*prompb.TimeSeries,
 	switch metric.Data.(type) {
 	// int points
 	case *otlp.Metric_DoubleGauge:
+		if metric.GetDoubleGauge().GetDataPoints() == nil {
+			return fmt.Errorf("nil data point. %s is dropped", metric.GetName())
+		}
 		for _, pt := range metric.GetDoubleGauge().GetDataPoints() {
 			addSingleDoubleDataPoint(pt, metric, prwe.namespace, tsMap)
 		}
-		return nil
 	case *otlp.Metric_IntGauge:
+		if metric.GetIntGauge().GetDataPoints() == nil {
+			return fmt.Errorf("nil data point. %s is dropped", metric.GetName())
+		}
 		for _, pt := range metric.GetIntGauge().GetDataPoints() {
 			addSingleIntDataPoint(pt, metric, prwe.namespace, tsMap)
 		}
-		return nil
 	case *otlp.Metric_DoubleSum:
+		if metric.GetDoubleSum().GetDataPoints() == nil {
+			return fmt.Errorf("nil data point. %s is dropped", metric.GetName())
+		}
 		for _, pt := range metric.GetDoubleSum().GetDataPoints() {
 			addSingleDoubleDataPoint(pt, metric, prwe.namespace, tsMap)
 		}
-		return nil
 	case *otlp.Metric_IntSum:
+		if metric.GetIntSum().GetDataPoints() == nil {
+			return fmt.Errorf("nil data point. %s is dropped", metric.GetName())
+		}
 		for _, pt := range metric.GetIntSum().GetDataPoints() {
 			addSingleIntDataPoint(pt, metric, prwe.namespace, tsMap)
 		}
-		return nil
 	}
-	return errors.New("invalid metric type: wants int or double data points")
+	return nil
 }
 
 // handleHistogramMetric processes data points in a single OTLP histogram metric by mapping the sum, count and each
@@ -181,15 +191,21 @@ func (prwe *prwExporter) handleHistogramMetric(tsMap map[string]*prompb.TimeSeri
 
 	switch metric.Data.(type) {
 	case *otlp.Metric_IntHistogram:
+		if metric.GetIntHistogram().GetDataPoints() == nil {
+			return fmt.Errorf("nil data point. %s is dropped", metric.GetName())
+		}
 		for _, pt := range metric.GetIntHistogram().GetDataPoints() {
 			addSingleIntHistogramDataPoint(pt, metric, prwe.namespace, tsMap)
 		}
 	case *otlp.Metric_DoubleHistogram:
-		for _, pt := range metric.GetIntHistogram().GetDataPoints() {
+		if metric.GetDoubleHistogram().GetDataPoints() == nil {
+			return fmt.Errorf("nil data point. %s is dropped", metric.GetName())
+		}
+		for _, pt := range metric.GetDoubleHistogram().GetDataPoints() {
 			addSingleDoubleHistogramDataPoint(pt, metric, prwe.namespace, tsMap)
 		}
 	}
-	return errors.New("invalid metric type: wants histogram points")
+	return nil
 }
 
 // export sends a Snappy-compressed WriteRequest containing TimeSeries to a remote write endpoint in order
