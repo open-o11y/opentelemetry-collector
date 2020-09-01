@@ -21,7 +21,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/pkg/errors"
 	"io"
 	"net/http"
 	"net/url"
