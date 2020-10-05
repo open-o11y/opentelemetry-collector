@@ -32,5 +32,7 @@ type Config struct {
 	// See: https://prometheus.io/docs/practices/naming/#metric-names
 	Namespace string `mapstructure:"namespace"`
 
+	AuthCfg map[string]string `mapstructure:"auth"`
+
 	HTTPClientSettings confighttp.HTTPClientSettings `mapstructure:",squash"`
 }

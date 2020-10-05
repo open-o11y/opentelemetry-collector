@@ -129,10 +129,13 @@ func (prwe *PrwExporter) PushMetrics(ctx context.Context, md pdata.Metrics) (int
 				}
 			}
 		}
+		fmt.Println("pushing metrics")
 
 		if err := prwe.export(ctx, tsMap); err != nil {
 			dropped = md.MetricCount()
 			errs = append(errs, err)
+			fmt.Print("pushing metrics error: ")
+			fmt.Println(err)
 		}
 
 		if dropped != 0 {
