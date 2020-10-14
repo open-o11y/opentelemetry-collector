@@ -11,16 +11,16 @@ receivers:
       grpc:
       http:
 
-  # opencensus:
+  opencensus:
 
-  # jaeger:
-  #   protocols:
-  #     grpc:
-  #     thrift_binary:
-  #     thrift_compact:
-  #     thrift_http:
+  jaeger:
+    protocols:
+      grpc:
+      thrift_binary:
+      thrift_compact:
+      thrift_http:
 
-  # zipkin:
+  zipkin:
 
   # Collect own metrics
   prometheus:
@@ -32,12 +32,7 @@ receivers:
             - targets: [ '0.0.0.0:8888' ]
 
 processors:
-  labels_processor:
-    labels:
-      - key: cluster
-        value: $MY_CLUSTER_NAME
-      - key: __replica__
-        value: $MY_POD_NAME
+  batch:
 
 exporters:
   logging:
@@ -47,14 +42,14 @@ service:
 
   pipelines:
 
-    # traces:
-    #   receivers: [otlp, opencensus, jaeger, zipkin]
-    #   processors: [batch]
-    #   exporters: [logging]
+    traces:
+      receivers: [otlp, opencensus, jaeger, zipkin]
+      processors: [batch]
+      exporters: [logging]
 
     metrics:
-      receivers: [prometheus]
-      processors: [labels_processor]
+      receivers: [otlp, opencensus, prometheus]
+      processors: [batch]
       exporters: [logging]
 
   extensions: [health_check, pprof, zpages]
