@@ -45,16 +45,16 @@ func (lp *labelMetricProcessor) ProcessMetrics(_ context.Context, md pdata.Metri
 
 				for _, label := range lp.cfg.Labels {
 					for _, dataPoint := range intDataPoint {
-						dataPoint.Labels = append(dataPoint.Labels, &v11.StringKeyValue{Key: label.Key, Value: label.Value})
+						deDuplicateAndAppend(&dataPoint.Labels, label.Key, label.Value)
 					}
 					for _, dataPoint := range doubleDataPoint {
-						dataPoint.Labels = append(dataPoint.Labels, &v11.StringKeyValue{Key: label.Key, Value: label.Value})
+						deDuplicateAndAppend(&dataPoint.Labels, label.Key, label.Value)
 					}
 					for _, dataPoint := range intHistogramDataPoint {
-						dataPoint.Labels = append(dataPoint.Labels, &v11.StringKeyValue{Key: label.Key, Value: label.Value})
+						deDuplicateAndAppend(&dataPoint.Labels, label.Key, label.Value)
 					}
 					for _, dataPoint := range doubleHistogramDataPoint {
-						dataPoint.Labels = append(dataPoint.Labels, &v11.StringKeyValue{Key: label.Key, Value: label.Value})
+						deDuplicateAndAppend(&dataPoint.Labels, label.Key, label.Value)
 					}
 				}
 
@@ -63,4 +63,17 @@ func (lp *labelMetricProcessor) ProcessMetrics(_ context.Context, md pdata.Metri
 	}
 
 	return md, nil
+}
+
+// This processor will always by default update existing label values. Also assumes duplicate labels do not already exist in the metric
+func deDuplicateAndAppend(labels *[]*v11.StringKeyValue, key string, value string) {
+	// If the key already exists, overwrite it
+	for _, elem := range *labels {
+		if elem.Key == key {
+			elem.Value = value
+			return
+		}
+	}
+	// If it does not exist, append it
+	*labels = append(*labels, &v11.StringKeyValue{Key: key, Value: value})
 }

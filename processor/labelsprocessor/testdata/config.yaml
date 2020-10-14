@@ -8,8 +8,12 @@ processors:
         value: value1
       - key: label2
         value: value2
-  # The following specifies an invalid resource configuration, it has to have at least one action set in attributes field.
-  labels/invalid:
+  labels_processor/env_vars:
+    labels:
+      - key: label1
+        value: $VALUE_1
+      - key: label2
+        value: $VALUE_2
 
 
 exporters:

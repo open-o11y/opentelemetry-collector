@@ -1,6 +1,7 @@
 package labelsprocessor
 
 import (
+	"os"
 	"path"
 	"testing"
 
@@ -17,6 +18,9 @@ func TestLoadConfig(t *testing.T) {
 
 	factories.Processors[typeStr] = NewFactory()
 
+	os.Setenv("VALUE_1", "first_val")
+	os.Setenv("VALUE_2", "second_val")
+
 	cfg, err := configtest.LoadConfigFile(t, path.Join(".", "testdata", "config.yaml"), factories)
 	assert.NoError(t, err)
 	assert.NotNil(t, cfg)
@@ -32,10 +36,14 @@ func TestLoadConfig(t *testing.T) {
 		},
 	})
 
-	assert.Equal(t, cfg.Processors["labels_processor/invalid"], &Config{
+	assert.Equal(t, cfg.Processors["labels_processor/env_vars"], &Config{
 		ProcessorSettings: configmodels.ProcessorSettings{
 			TypeVal: "labels_processor",
-			NameVal: "labels_processor/invalid",
+			NameVal: "labels_processor/env_vars",
+		},
+		Labels: []LabelConfig{
+			{Key: "label1", Value: "first_val"},
+			{Key: "label2", Value: "second_val"},
 		},
 	})
 

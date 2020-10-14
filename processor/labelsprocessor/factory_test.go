@@ -45,7 +45,7 @@ func TestCreateProcessor(t *testing.T) {
 	}
 
 	mp, mErr := factory.CreateMetricsProcessor(context.Background(), component.ProcessorCreateParams{Logger: zap.NewNop()}, cfg, exportertest.NewNopMetricsExporter())
-	assert.Equal(t, true, mp != nil)
-	assert.Equal(t, mErr, nil)
+	assert.NoError(t, mErr)
+	assert.NotNil(t, mp)
 
 }

@@ -2,8 +2,6 @@ package labelsprocessor
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/config/configmodels"
@@ -40,8 +38,6 @@ func createMetricsProcessor(
 	cfg configmodels.Processor,
 	nextConsumer consumer.MetricsConsumer) (component.MetricsProcessor, error) {
 	lp, err := newLabelMetricProcessor(cfg.(*Config))
-	e, _ := json.Marshal(lp)
-	fmt.Println(string(e))
 	if err != nil {
 		return nil, err
 	}
