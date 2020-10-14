@@ -50,40 +50,25 @@ func (lp *labelMetricProcessor) ProcessMetrics(_ context.Context, md pdata.Metri
 		for _, instrMetric := range otlpMetric.GetInstrumentationLibraryMetrics() {
 			for _, metric := range instrMetric.GetMetrics() {
 
-				// Multiple types of Data Points exists, since there is no way to determine this beforehand we initialize variables for all
-				var intDataPoint []*v1.IntDataPoint
-				var doubleDataPoint []*v1.DoubleDataPoint
-				var intHistogramDataPoint []*v1.IntHistogramDataPoint
-				var doubleHistogramDataPoint []*v1.DoubleHistogramDataPoint
-
-				if metric.GetDoubleGauge() != nil {
-					doubleDataPoint = metric.GetDoubleGauge().GetDataPoints()
-				} else if metric.GetDoubleHistogram() != nil {
-					doubleHistogramDataPoint = metric.GetDoubleHistogram().GetDataPoints()
-				} else if metric.GetDoubleSum() != nil {
-					doubleDataPoint = metric.GetDoubleSum().GetDataPoints()
+				// Multiple types of Data Points exists, and each of them must be handled differently
+				if metric.GetIntSum() != nil {
+					intDataPoints := metric.GetIntSum().GetDataPoints()
+					handleIntDataPoints(intDataPoints, lp)
 				} else if metric.GetIntGauge() != nil {
-					intDataPoint = metric.GetIntGauge().GetDataPoints()
+					intDataPoints := metric.GetIntGauge().GetDataPoints()
+					handleIntDataPoints(intDataPoints, lp)
+				} else if metric.GetDoubleGauge() != nil {
+					doubleDataPoints := metric.GetDoubleGauge().GetDataPoints()
+					handleDoubleDataPoints(doubleDataPoints, lp)
+				} else if metric.GetDoubleSum() != nil {
+					doubleDataPoints := metric.GetDoubleSum().GetDataPoints()
+					handleDoubleDataPoints(doubleDataPoints, lp)
 				} else if metric.GetIntHistogram() != nil {
-					intHistogramDataPoint = metric.GetIntHistogram().GetDataPoints()
-				} else if metric.GetIntSum() != nil {
-					intDataPoint = metric.GetIntSum().GetDataPoints()
-				}
-
-				// Note only 1 of these variables will get populated at a time, hence the loops for the remaining variables do nothing
-				for _, label := range lp.cfg.Labels {
-					for _, dataPoint := range intDataPoint {
-						deDuplicateAndAppend(&dataPoint.Labels, label.Key, label.Value)
-					}
-					for _, dataPoint := range doubleDataPoint {
-						deDuplicateAndAppend(&dataPoint.Labels, label.Key, label.Value)
-					}
-					for _, dataPoint := range intHistogramDataPoint {
-						deDuplicateAndAppend(&dataPoint.Labels, label.Key, label.Value)
-					}
-					for _, dataPoint := range doubleHistogramDataPoint {
-						deDuplicateAndAppend(&dataPoint.Labels, label.Key, label.Value)
-					}
+					intHistogramDataPoints := metric.GetIntHistogram().GetDataPoints()
+					handleIntHistogramDataPoints(intHistogramDataPoints, lp)
+				} else if metric.GetDoubleHistogram() != nil {
+					doubleHistogramDataPoints := metric.GetDoubleHistogram().GetDataPoints()
+					handleDoubleHistogramDataPoints(doubleHistogramDataPoints, lp)
 				}
 
 			}
@@ -91,6 +76,38 @@ func (lp *labelMetricProcessor) ProcessMetrics(_ context.Context, md pdata.Metri
 	}
 
 	return md, nil
+}
+
+func handleIntDataPoints(intDataPoints []*v1.IntDataPoint, lp *labelMetricProcessor) {
+	for _, label := range lp.cfg.Labels {
+		for _, dataPoint := range intDataPoints {
+			deDuplicateAndAppend(&dataPoint.Labels, label.Key, label.Value)
+		}
+	}
+}
+
+func handleDoubleDataPoints(doubleDataPoints []*v1.DoubleDataPoint, lp *labelMetricProcessor) {
+	for _, label := range lp.cfg.Labels {
+		for _, dataPoint := range doubleDataPoints {
+			deDuplicateAndAppend(&dataPoint.Labels, label.Key, label.Value)
+		}
+	}
+}
+
+func handleIntHistogramDataPoints(intHistogramDataPoints []*v1.IntHistogramDataPoint, lp *labelMetricProcessor) {
+	for _, label := range lp.cfg.Labels {
+		for _, dataPoint := range intHistogramDataPoints {
+			deDuplicateAndAppend(&dataPoint.Labels, label.Key, label.Value)
+		}
+	}
+}
+
+func handleDoubleHistogramDataPoints(doubleHistogramDataPoints []*v1.DoubleHistogramDataPoint, lp *labelMetricProcessor) {
+	for _, label := range lp.cfg.Labels {
+		for _, dataPoint := range doubleHistogramDataPoints {
+			deDuplicateAndAppend(&dataPoint.Labels, label.Key, label.Value)
+		}
+	}
 }
 
 // This processor will always by default update existing label values. Also assumes duplicate labels do not already exist in the metric
