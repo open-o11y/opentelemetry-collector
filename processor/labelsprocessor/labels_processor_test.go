@@ -15,6 +15,46 @@ import (
 	v1 "go.opentelemetry.io/collector/internal/data/opentelemetry-proto-gen/resource/v1"
 )
 
+func TestValidateConfig(t *testing.T) {
+	emptyValConfig := &Config{
+		ProcessorSettings: configmodels.ProcessorSettings{
+			TypeVal: "labels_processor",
+			NameVal: "labels_processor",
+		},
+		Labels: []LabelConfig{
+			{Key: "cluster", Value: ""},
+			{Key: "__replica__", Value: "r1"},
+		},
+	}
+
+	duplicateKeyConfig := &Config{
+		ProcessorSettings: configmodels.ProcessorSettings{
+			TypeVal: "labels_processor",
+			NameVal: "labels_processor",
+		},
+		Labels: []LabelConfig{
+			{Key: "cluster", Value: "c1"},
+			{Key: "__replica__", Value: "r1"},
+			{Key: "cluster", Value: "c2"},
+		},
+	}
+
+	validCfg := &Config{
+		ProcessorSettings: configmodels.ProcessorSettings{
+			TypeVal: "labels_processor",
+			NameVal: "labels_processor",
+		},
+		Labels: []LabelConfig{
+			{Key: "cluster", Value: "c1"},
+			{Key: "__replica__", Value: "r1"},
+		},
+	}
+
+	assert.Error(t, validateConfig(emptyValConfig))
+	assert.Error(t, validateConfig(duplicateKeyConfig))
+	assert.Nil(t, validateConfig(validCfg))
+}
+
 func TestAttachLabels(t *testing.T) {
 
 	// First setting up config and parameters for tests

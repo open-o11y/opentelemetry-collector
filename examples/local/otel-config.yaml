@@ -38,7 +38,6 @@ processors:
         value: $MY_CLUSTER_NAME
       - key: __replica__
         value: $MY_POD_NAME
-      - key: cluster
 
 exporters:
   logging:

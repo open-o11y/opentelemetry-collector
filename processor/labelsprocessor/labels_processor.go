@@ -2,6 +2,7 @@ package labelsprocessor
 
 import (
 	"context"
+	"fmt"
 
 	"go.opentelemetry.io/collector/consumer/pdata"
 	v11 "go.opentelemetry.io/collector/internal/data/opentelemetry-proto-gen/common/v1"
@@ -13,7 +14,32 @@ type labelMetricProcessor struct {
 }
 
 func newLabelMetricProcessor(cfg *Config) (*labelMetricProcessor, error) {
+	err := validateConfig(cfg)
+	if err != nil {
+		return nil, err
+	}
 	return &labelMetricProcessor{cfg: cfg}, nil
+}
+
+func validateConfig(cfg *Config) error {
+	// Ensure no empty keys/values exist
+	for _, elem := range cfg.Labels {
+		if elem.Key == "" || elem.Value == "" {
+			return fmt.Errorf("Labels Processor configuration contains an empty key or value")
+		}
+	}
+
+	//Ensure no duplicate keys exist
+	keys := make(map[string]bool)
+	for _, elem := range cfg.Labels {
+		_, value := keys[elem.Key]
+		if value {
+			return fmt.Errorf("Labels Processor configuration contains duplicate keys")
+		}
+		keys[elem.Key] = true
+	}
+
+	return nil
 }
 
 func (lp *labelMetricProcessor) ProcessMetrics(_ context.Context, md pdata.Metrics) (pdata.Metrics, error) {
@@ -24,6 +50,7 @@ func (lp *labelMetricProcessor) ProcessMetrics(_ context.Context, md pdata.Metri
 		for _, instrMetric := range otlpMetric.GetInstrumentationLibraryMetrics() {
 			for _, metric := range instrMetric.GetMetrics() {
 
+				// Multiple types of Data Points exists, since there is no way to determine this beforehand we initialize variables for all
 				var intDataPoint []*v1.IntDataPoint
 				var doubleDataPoint []*v1.DoubleDataPoint
 				var intHistogramDataPoint []*v1.IntHistogramDataPoint
@@ -43,6 +70,7 @@ func (lp *labelMetricProcessor) ProcessMetrics(_ context.Context, md pdata.Metri
 					intDataPoint = metric.GetIntSum().GetDataPoints()
 				}
 
+				// Note only 1 of these variables will get populated at a time, hence the loops for the remaining variables do nothing
 				for _, label := range lp.cfg.Labels {
 					for _, dataPoint := range intDataPoint {
 						deDuplicateAndAppend(&dataPoint.Labels, label.Key, label.Value)
