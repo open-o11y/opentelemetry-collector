@@ -79,46 +79,42 @@ func (lp *labelMetricProcessor) ProcessMetrics(_ context.Context, md pdata.Metri
 }
 
 func handleIntDataPoints(intDataPoints []*v1.IntDataPoint, lp *labelMetricProcessor) {
-	for _, label := range lp.cfg.Labels {
-		for _, dataPoint := range intDataPoints {
-			deDuplicateAndAppend(&dataPoint.Labels, label.Key, label.Value)
-		}
+	for _, dataPoint := range intDataPoints {
+		upsertLabels(&dataPoint.Labels, lp)
 	}
 }
 
 func handleDoubleDataPoints(doubleDataPoints []*v1.DoubleDataPoint, lp *labelMetricProcessor) {
-	for _, label := range lp.cfg.Labels {
-		for _, dataPoint := range doubleDataPoints {
-			deDuplicateAndAppend(&dataPoint.Labels, label.Key, label.Value)
-		}
+	for _, dataPoint := range doubleDataPoints {
+		upsertLabels(&dataPoint.Labels, lp)
 	}
 }
 
 func handleIntHistogramDataPoints(intHistogramDataPoints []*v1.IntHistogramDataPoint, lp *labelMetricProcessor) {
-	for _, label := range lp.cfg.Labels {
-		for _, dataPoint := range intHistogramDataPoints {
-			deDuplicateAndAppend(&dataPoint.Labels, label.Key, label.Value)
-		}
+	for _, dataPoint := range intHistogramDataPoints {
+		upsertLabels(&dataPoint.Labels, lp)
 	}
 }
 
 func handleDoubleHistogramDataPoints(doubleHistogramDataPoints []*v1.DoubleHistogramDataPoint, lp *labelMetricProcessor) {
-	for _, label := range lp.cfg.Labels {
-		for _, dataPoint := range doubleHistogramDataPoints {
-			deDuplicateAndAppend(&dataPoint.Labels, label.Key, label.Value)
-		}
+	for _, dataPoint := range doubleHistogramDataPoints {
+		upsertLabels(&dataPoint.Labels, lp)
 	}
+
 }
 
-// This processor will always by default update existing label values. Also assumes duplicate labels do not already exist in the metric
-func deDuplicateAndAppend(labels *[]*v11.StringKeyValue, key string, value string) {
-	// If the key already exists, overwrite it
-	for _, elem := range *labels {
-		if elem.Key == key {
-			elem.Value = value
-			return
+func upsertLabels(labels *[]*v11.StringKeyValue, lp *labelMetricProcessor) {
+	for _, label := range lp.cfg.Labels {
+		var updated bool = false
+		for _, elem := range *labels {
+			if elem.Key == label.Key {
+				elem.Value = label.Value
+				updated = true
+				break
+			}
+		}
+		if !updated {
+			*labels = append(*labels, &v11.StringKeyValue{Key: label.Key, Value: label.Value})
 		}
 	}
-	// If it does not exist, append it
-	*labels = append(*labels, &v11.StringKeyValue{Key: key, Value: value})
 }
