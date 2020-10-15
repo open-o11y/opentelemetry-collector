@@ -22,14 +22,12 @@ func newLabelMetricProcessor(cfg *Config) (*labelMetricProcessor, error) {
 }
 
 func validateConfig(cfg *Config) error {
-	// Ensure no empty keys/values exist
 	for _, elem := range cfg.Labels {
 		if elem.Key == "" || elem.Value == "" {
 			return fmt.Errorf("Labels Processor configuration contains an empty key or value")
 		}
 	}
 
-	//Ensure no duplicate keys exist
 	keys := make(map[string]bool)
 	for _, elem := range cfg.Labels {
 		_, value := keys[elem.Key]
