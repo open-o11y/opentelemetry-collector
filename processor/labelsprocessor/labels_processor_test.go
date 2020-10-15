@@ -16,6 +16,17 @@ import (
 )
 
 func TestValidateConfig(t *testing.T) {
+	missingValConfig := &Config{
+		ProcessorSettings: configmodels.ProcessorSettings{
+			TypeVal: "labels_processor",
+			NameVal: "labels_processor",
+		},
+		Labels: []LabelConfig{
+			{Key: "cluster"},
+			{Key: "__replica__", Value: "r1"},
+		},
+	}
+
 	emptyValConfig := &Config{
 		ProcessorSettings: configmodels.ProcessorSettings{
 			TypeVal: "labels_processor",
@@ -50,6 +61,7 @@ func TestValidateConfig(t *testing.T) {
 		},
 	}
 
+	assert.Error(t, validateConfig(missingValConfig))
 	assert.Error(t, validateConfig(emptyValConfig))
 	assert.Error(t, validateConfig(duplicateKeyConfig))
 	assert.Nil(t, validateConfig(validCfg))
