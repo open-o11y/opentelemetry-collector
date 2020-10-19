@@ -18,6 +18,7 @@ package defaultcomponents
 import (
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/component/componenterror"
+	"go.opentelemetry.io/collector/exporter/cortexexporter"
 	"go.opentelemetry.io/collector/exporter/fileexporter"
 	"go.opentelemetry.io/collector/exporter/jaegerexporter"
 	"go.opentelemetry.io/collector/exporter/kafkaexporter"
@@ -36,6 +37,7 @@ import (
 	"go.opentelemetry.io/collector/processor/filterprocessor"
 	"go.opentelemetry.io/collector/processor/groupbytraceprocessor"
 	"go.opentelemetry.io/collector/processor/memorylimiter"
+	"go.opentelemetry.io/collector/processor/metricstransformprocessor"
 	"go.opentelemetry.io/collector/processor/queuedprocessor"
 	"go.opentelemetry.io/collector/processor/resourceprocessor"
 	"go.opentelemetry.io/collector/processor/samplingprocessor/probabilisticsamplerprocessor"
@@ -87,6 +89,7 @@ func Components() (
 		opencensusexporter.NewFactory(),
 		prometheusexporter.NewFactory(),
 		prometheusremotewriteexporter.NewFactory(),
+		cortexexporter.NewFactory(),
 		loggingexporter.NewFactory(),
 		zipkinexporter.NewFactory(),
 		jaegerexporter.NewFactory(),
@@ -102,6 +105,7 @@ func Components() (
 		attributesprocessor.NewFactory(),
 		resourceprocessor.NewFactory(),
 		queuedprocessor.NewFactory(),
+		metricstransformprocessor.NewFactory(),
 		batchprocessor.NewFactory(),
 		memorylimiter.NewFactory(),
 		tailsamplingprocessor.NewFactory(),

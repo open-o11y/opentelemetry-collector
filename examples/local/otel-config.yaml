@@ -33,6 +33,17 @@ receivers:
 
 processors:
   batch:
+  metricstransform:
+    transforms:
+        - action: update
+          operations:
+            - action: add_label
+              new_label: cluster
+              new_value: $MY_CLUSTER_NAME
+            - action: add_label
+              new_label: __replica__
+              new_value: $MY_POD_NAME
+
 
 exporters:
   logging:
@@ -42,14 +53,14 @@ service:
 
   pipelines:
 
-    traces:
-      receivers: [otlp, opencensus, jaeger, zipkin]
-      processors: [batch]
-      exporters: [logging]
+    # traces:
+    #   receivers: [otlp, opencensus, jaeger, zipkin]
+    #   processors: [batch]
+    #   exporters: [logging]
 
     metrics:
-      receivers: [otlp, opencensus, prometheus]
-      processors: [batch]
+      receivers: [prometheus]
+      processors: [metricstransform]
       exporters: [logging]
 
   extensions: [health_check, pprof, zpages]
