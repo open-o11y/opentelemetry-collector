@@ -29,6 +29,7 @@ GOSEC=gosec
 STATIC_CHECK=staticcheck
 # BUILD_TYPE should be one of (dev, release).
 BUILD_TYPE?=release
+VERSION=0.13.0
 
 GIT_SHA=$(shell git rev-parse --short HEAD)
 BUILD_INFO_IMPORT_PATH=go.opentelemetry.io/collector/internal/version
