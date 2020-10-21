@@ -1,0 +1,44 @@
+serviceAccounts:
+  create: false
+  name: default
+
+server:
+  remoteWrite:
+    - url: http://iamproxy.stealfire.svc.cluster.local:80/workspaces/ws-7cd45747-2381-4a2a-847f-fa61a3694a74/api/v1/remote_write
+
+serverFiles:
+  prometheus.yml:
+    scrape_configs:
+    - job_name: 'kubernetes-ingresses'
+
+      metrics_path: /probe
+      params:
+        module: [http_2xx]
+
+      tls_config:
+        ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        insecure_skip_verify: true
+      bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+
+      kubernetes_sd_configs:
+      - role: ingress
+
+      relabel_configs:
+      # Example relabel to probe only some ingresses that have "example.io/should_be_probed = true" annotation
+      #  - source_labels: [__meta_kubernetes_ingress_annotation_example_io_should_be_probed]
+      #    action: keep
+      #    regex: true
+      - source_labels: [__address__,__meta_kubernetes_ingress_path]
+        regex: (.+);(.+)
+        replacement: http://${1}${2}
+        target_label: __param_target
+      - target_label: __address__
+        replacement: blackbox-exporter-service:9115
+      - source_labels: [__param_target]
+        target_label: instance
+      - action: labelmap
+        regex: __meta_kubernetes_ingress_label_(.+)
+      - source_labels: [__meta_kubernetes_namespace]
+        target_label: kubernetes_namespace
+      - source_labels: [__meta_kubernetes_ingress_name]
+        target_label: kubernetes_name
