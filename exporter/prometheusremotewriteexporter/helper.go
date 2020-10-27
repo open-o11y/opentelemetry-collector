@@ -28,6 +28,7 @@ import (
 	"go.opentelemetry.io/collector/consumer/pdata"
 	common "go.opentelemetry.io/collector/internal/data/opentelemetry-proto-gen/common/v1"
 	otlp "go.opentelemetry.io/collector/internal/data/opentelemetry-proto-gen/metrics/v1"
+	resource "go.opentelemetry.io/collector/internal/data/opentelemetry-proto-gen/resource/v1"
 )
 
 const (
@@ -121,10 +122,11 @@ func timeSeriesSignature(metric *otlp.Metric, labels *[]prompb.Label) string {
 
 // convertResourceAttributes to labels takes a metric's respective ResourceMetric to extract resource attributes and convert to a
 // array of StringKeyValue
-func convertResourceAttributesToLabels(resourceMetric *otlp.ResourceMetrics) ([]*common.StringKeyValue, error) {
-	attrs := resourceMetric.Resource.Attributes
+func convertResourceAttributesToLabels(resource *resource.Resource) ([]*common.StringKeyValue, error) {
+	attrs := resource.Attributes
 
 	// convert attributes to strings since labels are only strings. return error if unsupported types exist
+	// Assumption here is that no metrics should have Array or Kvlist resource attribute values, hence only an error is returned if one is found
 	newLabels := make([]*common.StringKeyValue, len(attrs))
 	for index, attr := range attrs {
 		newLabel := common.StringKeyValue{Key: attr.GetKey()}
@@ -136,7 +138,8 @@ func convertResourceAttributesToLabels(resourceMetric *otlp.ResourceMetrics) ([]
 		case *common.AnyValue_IntValue:
 			newLabel.Value = strconv.FormatInt(attr.GetValue().GetIntValue(), 10)
 		case *common.AnyValue_DoubleValue:
-			newLabel.Value = strconv.FormatFloat(attr.GetValue().GetDoubleValue(), 'E', -1, 64)
+			// option 'G' formats floats with an exponent (eg. d.dddde±dd) for sufficiently large values
+			newLabel.Value = strconv.FormatFloat(attr.GetValue().GetDoubleValue(), 'G', -1, 64)
 		case *common.AnyValue_ArrayValue:
 			return nil, errors.New("Array value resource attribute cannot be converted to label")
 		case *common.AnyValue_KvlistValue:
@@ -146,8 +149,6 @@ func convertResourceAttributesToLabels(resourceMetric *otlp.ResourceMetrics) ([]
 	}
 
 	return newLabels, nil
-
-	return nil, nil
 }
 
 // createLabelSet creates a slice of Cortex Label with OTLP labels and paris of string values.

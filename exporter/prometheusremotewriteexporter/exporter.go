@@ -94,9 +94,13 @@ func (prwe *PrwExporter) PushMetrics(ctx context.Context, md pdata.Metrics) (int
 			if resourceMetric == nil {
 				continue
 			}
-			resourceAttributes, err := convertResourceAttributesToLabels(resourceMetric)
-			if err != nil {
-				errs = append(errs, err)
+			var resourceAttributes []*common.StringKeyValue
+			if resourceMetric.Resource != nil {
+				var err error
+				resourceAttributes, err = convertResourceAttributesToLabels(resourceMetric.Resource)
+				if err != nil {
+					errs = append(errs, err)
+				}
 			}
 			// TODO: add resource attributes as labels, probably in next PR
 			for _, instrumentationMetrics := range resourceMetric.InstrumentationLibraryMetrics {

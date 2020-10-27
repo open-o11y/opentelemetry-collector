@@ -21,6 +21,7 @@ import (
 
 	commonpb "go.opentelemetry.io/collector/internal/data/opentelemetry-proto-gen/common/v1"
 	otlp "go.opentelemetry.io/collector/internal/data/opentelemetry-proto-gen/metrics/v1"
+	resource "go.opentelemetry.io/collector/internal/data/opentelemetry-proto-gen/resource/v1"
 )
 
 var (
@@ -29,20 +30,27 @@ var (
 	msTime1 = int64(time1 / uint64(int64(time.Millisecond)/int64(time.Nanosecond)))
 	msTime2 = int64(time2 / uint64(int64(time.Millisecond)/int64(time.Nanosecond)))
 
-	label11 = "test_label11"
-	value11 = "test_value11"
-	label12 = "test_label12"
-	value12 = "test_value12"
-	label21 = "test_label21"
-	value21 = "test_value21"
-	label22 = "test_label22"
-	value22 = "test_value22"
-	label31 = "test_label31"
-	value31 = "test_value31"
-	label32 = "test_label32"
-	value32 = "test_value32"
-	dirty1  = "%"
-	dirty2  = "?"
+	label11       = "test_label11"
+	value11       = "test_value11"
+	label12       = "test_label12"
+	value12       = "test_value12"
+	label21       = "test_label21"
+	value21       = "test_value21"
+	label22       = "test_label22"
+	value22       = "test_value22"
+	label31       = "test_label31"
+	value31       = "test_value31"
+	label32       = "test_label32"
+	value32       = "test_value32"
+	dirty1        = "%"
+	dirty2        = "?"
+	dirty3        = "."
+	resAttrLabel1 = "test_resattr1"
+	resAttrValue1 = "test_resattrval1"
+	resAttrLabel2 = "__testresattr2__"
+	resAttrValue2 = "test_resattrval2"
+	resAttrLabel3 = "test.resattr3"
+	resAttrValue3 = "test_resattrval3"
 
 	intVal1   int64 = 1
 	intVal2   int64 = 2
@@ -55,6 +63,9 @@ var (
 
 	promLbs1 = getPromLabels(label11, value11, label12, value12)
 	promLbs2 = getPromLabels(label21, value21, label22, value22)
+
+	resAttrs          = getLabels(resAttrLabel1, resAttrValue1, resAttrLabel2, resAttrValue2)
+	resAttrsWithDirty = getLabels(resAttrLabel1, resAttrValue1, resAttrLabel2, resAttrValue2, resAttrLabel3, resAttrValue3)
 
 	lb1Sig = "-" + label11 + "-" + value11 + "-" + label12 + "-" + value12
 	lb2Sig = "-" + label21 + "-" + value21 + "-" + label22 + "-" + value22
@@ -73,6 +84,121 @@ var (
 	}
 	bounds  = []float64{0.1, 0.5, 0.99}
 	buckets = []uint64{1, 2, 3}
+
+	validStringValue = "valid_StringValue"
+	validIntValue    = "valid_IntValue"
+	validBoolValue   = "valid_BoolValue"
+	validDoubleValue = "valid_DoubleValue"
+
+	validResources = map[string]*resource.Resource{
+		validStringValue: {
+			Attributes: []*commonpb.KeyValue{
+				{
+					Key: resAttrLabel1,
+					Value: &commonpb.AnyValue{
+						Value: &commonpb.AnyValue_StringValue{
+							StringValue: resAttrValue1,
+						},
+					},
+				},
+			},
+			DroppedAttributesCount: 0,
+		},
+		validIntValue: {
+			Attributes: []*commonpb.KeyValue{
+				{
+					Key: resAttrLabel2,
+					Value: &commonpb.AnyValue{
+						Value: &commonpb.AnyValue_IntValue{
+							IntValue: 1,
+						},
+					},
+				},
+			},
+			DroppedAttributesCount: 0,
+		},
+		validBoolValue: {
+			Attributes: []*commonpb.KeyValue{
+				{
+					Key: resAttrLabel3,
+					Value: &commonpb.AnyValue{
+						Value: &commonpb.AnyValue_BoolValue{
+							BoolValue: false,
+						},
+					},
+				},
+			},
+			DroppedAttributesCount: 0,
+		},
+		validDoubleValue: {
+			Attributes: []*commonpb.KeyValue{
+				{
+					Key: resAttrLabel1,
+					Value: &commonpb.AnyValue{
+						Value: &commonpb.AnyValue_DoubleValue{
+							DoubleValue: 1.23,
+						},
+					},
+				},
+			},
+			DroppedAttributesCount: 0,
+		},
+	}
+
+	invalidArrayValue        = "invalid_ArrayValue"
+	invalidKvListValue       = "invalid_KvListValue"
+	invalidMissingAttributes = "invalid_MissingAttributes"
+
+	invalidResources = map[string]*resource.Resource{
+		invalidArrayValue: {
+			Attributes: []*commonpb.KeyValue{
+				{
+					Key: resAttrLabel1,
+					Value: &commonpb.AnyValue{
+						Value: &commonpb.AnyValue_ArrayValue{
+							ArrayValue: &commonpb.ArrayValue{
+								Values: []*commonpb.AnyValue{
+									{
+										Value: &commonpb.AnyValue_StringValue{
+											StringValue: resAttrValue1,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			DroppedAttributesCount: 0,
+		},
+		invalidKvListValue: {
+			Attributes: []*commonpb.KeyValue{
+				{
+					Key: resAttrLabel1,
+					Value: &commonpb.AnyValue{
+						Value: &commonpb.AnyValue_KvlistValue{
+							KvlistValue: &commonpb.KeyValueList{
+								Values: []*commonpb.KeyValue{
+									{
+										Key: resAttrValue2,
+										Value: &commonpb.AnyValue{
+											Value: &commonpb.AnyValue_StringValue{
+												StringValue: resAttrValue1,
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			DroppedAttributesCount: 0,
+		},
+		invalidMissingAttributes: {
+			DroppedAttributesCount: 0,
+		},
+	}
 
 	validIntGauge        = "valid_IntGauge"
 	validDoubleGauge     = "valid_DoubleGauge"

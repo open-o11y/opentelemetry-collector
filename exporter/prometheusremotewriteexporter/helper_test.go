@@ -16,6 +16,7 @@ package prometheusremotewriteexporter
 
 import (
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/prometheus/prometheus/prompb"
@@ -24,6 +25,7 @@ import (
 	"go.opentelemetry.io/collector/consumer/pdata"
 	common "go.opentelemetry.io/collector/internal/data/opentelemetry-proto-gen/common/v1"
 	otlp "go.opentelemetry.io/collector/internal/data/opentelemetry-proto-gen/metrics/v1"
+	resource "go.opentelemetry.io/collector/internal/data/opentelemetry-proto-gen/resource/v1"
 )
 
 // Test_validateMetrics checks validateMetrics return true if a type and temporality combination is valid, false
@@ -180,35 +182,106 @@ func Test_timeSeriesSignature(t *testing.T) {
 	}
 }
 
+func Test_convertResourceAttributesToLabels(t *testing.T) {
+	tests := []struct {
+		name          string
+		input         *resource.Resource
+		want          []*common.StringKeyValue
+		shouldSucceed bool
+	}{
+		{
+			"nil_case",
+			invalidResources[invalidMissingAttributes],
+			[]*common.StringKeyValue{},
+			true,
+		},
+		{
+			"valid_string_key_value_pairs",
+			validResources[validStringValue],
+			getLabels(resAttrLabel1, resAttrValue1),
+			true,
+		},
+		{
+			"valid_string_key_int_value_pair",
+			validResources[validIntValue],
+			getLabels(resAttrLabel2, "1"),
+			true,
+		},
+		{
+			"valid_string_key_bool_value_pair",
+			validResources[validBoolValue],
+			getLabels(resAttrLabel3, "false"),
+			true,
+		},
+		{
+			"valid_string_key_double_value_pairs",
+			validResources[validDoubleValue],
+			getLabels(resAttrLabel1, "1.23"),
+			true,
+		},
+		{
+			"invalid_string_key_array_value_pair",
+			invalidResources[invalidArrayValue],
+			nil,
+			false,
+		},
+		{
+			"valid_string_key_kvlist_value_pairs",
+			invalidResources[invalidKvListValue],
+			nil,
+			false,
+		},
+	}
+
+	// run tests
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			output, err := convertResourceAttributesToLabels(tt.input)
+			t.Log(err)
+			if tt.shouldSucceed {
+				assert.NoError(t, err)
+			} else {
+				assert.Error(t, err)
+			}
+			assert.EqualValues(t, tt.want, output)
+		})
+	}
+}
+
 // Test_createLabelSet checks resultant label names are sanitized and label in extra overrides label in labels if
 // collision happens. It does not check whether labels are not sorted
 func Test_createLabelSet(t *testing.T) {
 	tests := []struct {
-		name   string
-		orig   []*common.StringKeyValue
-		extras []string
-		want   []prompb.Label
+		name    string
+		orig    []*common.StringKeyValue
+		resAttr []*common.StringKeyValue
+		extras  []string
+		want    []prompb.Label
 	}{
 		{
 			"labels_clean",
 			lbs1,
+			nil,
 			[]string{label31, value31, label32, value32},
 			getPromLabels(label11, value11, label12, value12, label31, value31, label32, value32),
 		},
 		{
 			"labels_duplicate_in_extras",
 			lbs1,
+			nil,
 			[]string{label11, value31},
 			getPromLabels(label11, value31, label12, value12),
 		},
 		{
 			"labels_dirty",
 			lbs1Dirty,
+			nil,
 			[]string{label31 + dirty1, value31, label32, value32},
 			getPromLabels(label11+"_", value11, "key_"+label12, value12, label31+"_", value31, label32, value32),
 		},
 		{
 			"no_original_case",
+			nil,
 			nil,
 			[]string{label31, value31, label32, value32},
 			getPromLabels(label31, value31, label32, value32),
@@ -216,20 +289,43 @@ func Test_createLabelSet(t *testing.T) {
 		{
 			"empty_extra_case",
 			lbs1,
+			nil,
 			[]string{"", ""},
 			getPromLabels(label11, value11, label12, value12, "", ""),
 		},
 		{
 			"single_left_over_case",
 			lbs1,
+			nil,
 			[]string{label31, value31, label32},
 			getPromLabels(label11, value11, label12, value12, label31, value31),
+		},
+		{
+			"valid_resource_attributes_included",
+			lbs1,
+			resAttrs,
+			[]string{},
+			getPromLabels(label11, value11, label12, value12, resAttrLabel1, resAttrValue1, resAttrLabel2, resAttrValue2),
+		},
+		{
+			"dirty_resource_attributes_included",
+			lbs1,
+			resAttrsWithDirty,
+			[]string{},
+			getPromLabels(label11, value11, label12, value12, resAttrLabel1, resAttrValue1, resAttrLabel2, resAttrValue2, strings.Replace(resAttrLabel3, dirty3, "_", 1), resAttrValue3),
+		},
+		{
+			"all_input_types_with_dirtys_and_duplicates",
+			lbs1,
+			resAttrsWithDirty,
+			[]string{label11, value31, label31, value31},
+			getPromLabels(label11, value31, label12, value12, resAttrLabel1, resAttrValue1, resAttrLabel2, resAttrValue2, strings.Replace(resAttrLabel3, dirty3, "_", 1), resAttrValue3, label31, value31),
 		},
 	}
 	// run tests
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assert.ElementsMatch(t, tt.want, createLabelSet(tt.orig, tt.extras...))
+			assert.ElementsMatch(t, tt.want, createLabelSet(tt.orig, tt.resAttr, tt.extras...))
 		})
 	}
 }
