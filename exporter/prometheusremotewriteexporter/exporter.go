@@ -102,7 +102,6 @@ func (prwe *PrwExporter) PushMetrics(ctx context.Context, md pdata.Metrics) (int
 					errs = append(errs, err)
 				}
 			}
-			// TODO: add resource attributes as labels, probably in next PR
 			for _, instrumentationMetrics := range resourceMetric.InstrumentationLibraryMetrics {
 				if instrumentationMetrics == nil {
 					continue
