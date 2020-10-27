@@ -1,1 +1,0 @@
-Follow this [blog post](https://aws.amazon.com/blogs/opensource/network-load-balancer-nginx-ingress-controller-eks/)

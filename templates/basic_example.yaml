@@ -26,45 +26,32 @@ data:
             scrape_timeout: 10s
 
           scrape_configs:
-          - job_name: 'kubernetes-pods'
-
+          - job_name: 'kubernetes-pod-appmesh-envoy'
+            sample_limit: 10000
+            metrics_path: /stats/prometheus
             kubernetes_sd_configs:
             - role: pod
-
             tls_config:
               ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
               insecure_skip_verify: true
             bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-
+            
             relabel_configs:
-            # Example relabel to scrape only pods that have
-            # "prometheus.io/scrape = true" annotation.
-            #  - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape]
-            #    action: keep
-            #    regex: true
-            #
-            # Example relabel to customize metric path based on pod
-            # "prometheus.io/metric_path = <metric path>" annotation.
-            #  - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_metric_path]
-            #    action: replace
-            #    target_label: __metrics_path__
-            #    regex: (.+)
-            #
-            # Example relabel to scrape only single, desired port for the pod
-            # based on pod "prometheus.io/scrape_port = <port>" annotation.
-            #  - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_scrape_port]
-            #    action: replace
-            #    regex: ([^:]+)(?::\d+)?;(\d+)
-            #    replacement: $1:$2
-            #    target_label: __address__
-            #
+            - source_labels: [__meta_kubernetes_pod_container_name]
+              action: keep
+              regex: '^envoy$$'
+            - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+              action: replace
+              regex: ([^:]+)(?::\d+)?;(\d+)
+              replacement: $${1}:9901
+              target_label: __address__
             - action: labelmap
               regex: __meta_kubernetes_pod_label_(.+)
             - action: replace
               source_labels: [__meta_kubernetes_namespace]
               target_label: Namespace
-            - action: replace
-              source_labels: [__meta_kubernetes_pod_name]
+            - source_labels: [__meta_kubernetes_pod_name]
+              action: replace
               target_label: pod_name
             - action: replace
               source_labels: [__meta_kubernetes_pod_container_name]
@@ -79,52 +66,63 @@ data:
               source_labels: [__meta_kubernetes_pod_phase]
               target_label: pod_phase
               
+            # Exclude high cardinality metrics
             metric_relabel_configs:
-            - action: drop
-              source_labels: [__name__]
-              regex: 'go_gc_duration_seconds.*'
+            - source_labels: [ cluster_name ]
+              regex: '(outbound|inbound|prometheus_stats).*'
+              action: drop
+            - source_labels: [ tcp_prefix ]
+              regex: '(outbound|inbound|prometheus_stats).*'
+              action: drop
+            - source_labels: [ listener_address ]
+              regex: '(.+)'
+              action: drop
+            - source_labels: [ http_conn_manager_listener_prefix ]
+              regex: '(.+)'
+              action: drop
+            - source_labels: [ http_conn_manager_prefix ]
+              regex: '(.+)'
+              action: drop
+            - source_labels: [ __name__ ]
+              regex: 'envoy_tls.*'
+              action: drop
+            - source_labels: [ __name__ ]
+              regex: 'envoy_tcp_downstream.*'
+              action: drop
+            - source_labels: [ __name__ ]
+              regex: 'envoy_http_(stats|admin).*'
+              action: drop
+            - source_labels: [ __name__ ]
+              regex: 'envoy_cluster_(lb|retry|bind|internal|max|original).*'
+              action: drop
 
-          - job_name: 'kubernetes-service-endpoints'
-
+          - job_name: kubernetes-service-endpoints
+            sample_limit: 10000
             kubernetes_sd_configs:
             - role: endpoints
-
             tls_config:
               ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
               insecure_skip_verify: true
             bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-
             relabel_configs:
-            # Example relabel to scrape only endpoints that have
-            # "prometheus.io/scrape = true" annotation.
-            #  - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape]
-            #    action: keep
-            #    regex: true
-            #
-            # Example relabel to customize metric path based on endpoints
-            # "prometheus.io/metric_path = <metric path>" annotation.
-            #  - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_metric_path]
-            #    action: replace
-            #    target_label: __metrics_path__
-            #    regex: (.+)
-            #
-            # Example relabel to scrape only single, desired port for the service based
-            # on endpoints "prometheus.io/scrape_port = <port>" annotation.
-            #  - source_labels: [__address__, __meta_kubernetes_service_annotation_prometheus_io_scrape_port]
-            #    action: replace
-            #    regex: ([^:]+)(?::\d+)?;(\d+)
-            #    replacement: $1:$2
-            #    target_label: __address__
-            #
-            # Example relabel to configure scrape scheme for all service scrape targets
-            # based on endpoints "prometheus.io/scrape_scheme = <scheme>" annotation.
-            #  - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape_scheme]
-            #    action: replace
-            #    target_label: __scheme__
-            #    regex: (https?)
-            #
+            - action: keep
+              regex: true
+              source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape]
+            - action: replace
+              regex: (https?)
+              source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scheme]
+              target_label: __scheme__
+            - action: replace
+              regex: (.+)
+              source_labels: [__meta_kubernetes_service_annotation_prometheus_io_path]
+              target_label: __metrics_path__
+            - action: replace
+              regex: ([^:]+)(?::\d+)?;(\d+)
+              replacement: $$1:$$2
+              source_labels: [__address__,__meta_kubernetes_service_annotation_prometheus_io_port]
+              target_label: __address__
             - action: labelmap
-              regex: __meta_kubernetes_pod_label_(.+)      
+              regex: __meta_kubernetes_service_label_(.+)
             - action: replace
               source_labels: [__meta_kubernetes_namespace]
               target_label: Namespace
@@ -141,9 +139,57 @@ data:
               source_labels: [__meta_kubernetes_pod_container_name]
               target_label: container_name
 
+            # Exclude high cardinality metrics
+            metric_relabel_configs:
+            - source_labels: [__name__]
+              regex: 'go_gc_duration_seconds.*'
+              action: drop
+
+          - job_name: 'kubernetes-pod-jmx'
+            sample_limit: 10000
+            metrics_path: /metrics
+            kubernetes_sd_configs:
+            - role: pod
+            tls_config:
+              ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+              insecure_skip_verify: true
+            bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+
+            relabel_configs:
+            - source_labels: [__address__]
+              action: keep
+              regex: '.*:9404$$'
+            - action: labelmap
+              regex: __meta_kubernetes_pod_label_(.+)
+            - action: replace
+              source_labels: [__meta_kubernetes_namespace]
+              target_label: Namespace
+            - source_labels: [__meta_kubernetes_pod_name]
+              action: replace
+              target_label: pod_name
+            - action: replace
+              source_labels: [__meta_kubernetes_pod_container_name]
+              target_label: container_name
+            - action: replace
+              source_labels: [__meta_kubernetes_pod_controller_name]
+              target_label: pod_controller_name
+            - action: replace
+              source_labels: [__meta_kubernetes_pod_controller_kind]
+              target_label: pod_controller_kind
+            - action: replace
+              source_labels: [__meta_kubernetes_pod_phase]
+              target_label: pod_phase
+
+            metric_relabel_configs:
+            - source_labels: [__name__]
+              regex: 'jvm_gc_collection_seconds.*'
+              action: drop
+
     exporters:
       prometheusremotewrite:
+        # replace this endpoint with your endpoint
         endpoint: "https://aps-workspaces-gamma.us-east-1.amazonaws.com/workspaces/ws-7cd45747-2381-4a2a-847f-fa61a3694a74/api/v1/remote_write"
+        # adds a 'test' prefix to each metric
         namespace: test
         auth:
           region: "us-east-1"
