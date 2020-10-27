@@ -51,6 +51,8 @@ var (
 	resAttrValue2 = "test_resattrval2"
 	resAttrLabel3 = "test.resattr3"
 	resAttrValue3 = "test_resattrval3"
+	resAttrLabel4 = "test_label11"
+	resAttrValue4 = "test_resattrval4"
 
 	intVal1   int64 = 1
 	intVal2   int64 = 2
@@ -66,6 +68,7 @@ var (
 
 	resAttrs          = getLabels(resAttrLabel1, resAttrValue1, resAttrLabel2, resAttrValue2)
 	resAttrsWithDirty = getLabels(resAttrLabel1, resAttrValue1, resAttrLabel2, resAttrValue2, resAttrLabel3, resAttrValue3)
+	resAttrsWithDupe  = getLabels(resAttrLabel1, resAttrValue1, resAttrLabel4, resAttrValue4)
 
 	lb1Sig = "-" + label11 + "-" + value11 + "-" + label12 + "-" + value12
 	lb2Sig = "-" + label21 + "-" + value21 + "-" + label22 + "-" + value22

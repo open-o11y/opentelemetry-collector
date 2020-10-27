@@ -315,6 +315,13 @@ func Test_createLabelSet(t *testing.T) {
 			getPromLabels(label11, value11, label12, value12, resAttrLabel1, resAttrValue1, resAttrLabel2, resAttrValue2, strings.Replace(resAttrLabel3, dirty3, "_", 1), resAttrValue3),
 		},
 		{
+			"resource_attribute_overwritten_by_label",
+			lbs1,
+			resAttrsWithDupe,
+			[]string{},
+			getPromLabels(resAttrLabel4, value11, label12, value12, resAttrLabel1, resAttrValue1),
+		},
+		{
 			"all_input_types_with_dirtys_and_duplicates",
 			lbs1,
 			resAttrsWithDirty,

@@ -159,19 +159,8 @@ func createLabelSet(labels []*common.StringKeyValue, resourceAttributes []*commo
 	// map ensures no duplicate label name
 	l := map[string]prompb.Label{}
 
-	for _, lb := range labels {
-		l[lb.Key] = prompb.Label{
-			Name:  sanitize(lb.Key),
-			Value: lb.Value,
-		}
-	}
-
 	for _, ra := range resourceAttributes {
 		name := ra.GetKey()
-		_, found := l[name]
-		if found {
-			log.Println("label " + name + " is overwritten by a resource attribute. Check if Prometheus reserved labels are used.")
-		}
 		// if a resource attribute starts with the reserved prefix, sanitize but preserve prefix
 		if name[:2] == "__" {
 			name = "__" + sanitize(name[2:])
@@ -181,6 +170,13 @@ func createLabelSet(labels []*common.StringKeyValue, resourceAttributes []*commo
 		l[ra.GetKey()] = prompb.Label{
 			Name:  name,
 			Value: ra.GetValue(),
+		}
+	}
+
+	for _, lb := range labels {
+		l[lb.Key] = prompb.Label{
+			Name:  sanitize(lb.Key),
+			Value: lb.Value,
 		}
 	}
 
