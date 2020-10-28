@@ -138,8 +138,8 @@ func convertResourceAttributesToLabels(resource *resource.Resource) ([]*common.S
 		case *common.AnyValue_IntValue:
 			newLabel.Value = strconv.FormatInt(attr.GetValue().GetIntValue(), 10)
 		case *common.AnyValue_DoubleValue:
-			// option 'G' formats floats with an exponent (eg. d.dddde±dd) for sufficiently large values
-			newLabel.Value = strconv.FormatFloat(attr.GetValue().GetDoubleValue(), 'G', -1, 64)
+			// option 'f' formats floats without an exponent (eg. ddd.dddd)
+			newLabel.Value = strconv.FormatFloat(attr.GetValue().GetDoubleValue(), 'f', -1, 64)
 		case *common.AnyValue_ArrayValue:
 			return nil, errors.New("Array value resource attribute cannot be converted to label")
 		case *common.AnyValue_KvlistValue:
