@@ -57,6 +57,7 @@ func TestDefaultComponents(t *testing.T) {
 		"opencensus",
 		"prometheus",
 		"prometheusremotewrite",
+		"cortex",
 		"logging",
 		"zipkin",
 		"jaeger",
