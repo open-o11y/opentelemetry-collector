@@ -49,6 +49,7 @@ data:
         aws_auth:
           region: "YOUR_REGION"
           service: "aps"
+        namespace: "adot"
       logging:
         loglevel: debug
 
