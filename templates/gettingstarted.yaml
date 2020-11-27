@@ -44,10 +44,10 @@ data:
     exporters:
       awsprometheusremotewrite:
         # replace this with your endpoint
-        endpoint: "endpoint"
+        endpoint: "YOUR_ENDPOINT"
         # replace this with your region
-        auth:
-          region: "us-east-1"
+        aws_auth:
+          region: "YOUR_REGION"
           service: "aps"
       logging:
         loglevel: debug
@@ -64,7 +64,7 @@ data:
       pipelines:
         metrics:
           receivers: [prometheus]
-          exporters: [logging, prometheusremotewrite]
+          exporters: [logging, awsprometheusremotewrite]
 ---
 # create amazon-otelcol service account and role binding
 apiVersion: v1
@@ -151,11 +151,11 @@ spec:
       serviceAccountName: amazon-otelcol-admin
       containers:
       - command:
-          - "/amazon-otelcol"
+          - "/awscollector"
           - "--config=/conf/otel-collector-config.yaml"
 #           Memory Ballast size should be max 1/3 to 1/2 of memory.
           - "--mem-ballast-size-mib=683"
-        image: 822205079421.dkr.ecr.us-east-2.amazonaws.com/liujasn-intern-test:latest
+        image: PUBLIC_AWS_COLLECTOR_IMAGE
         name: otel-collector
         resources:
           limits:
@@ -169,8 +169,6 @@ spec:
         volumeMounts:
         - name: otel-collector-config-vol
           mountPath: /conf
-#        - name: otel-collector-secrets
-#          mountPath: /secrets
         livenessProbe:
           httpGet:
             path: /
@@ -186,11 +184,4 @@ spec:
               - key: otel-collector-config
                 path: otel-collector-config.yaml
           name: otel-collector-config-vol
-#        - secret:
-#            name: otel-collector-secrets
-#            items:
-#              - key: cert.pem
-#                path: cert.pem
-#              - key: key.pem
-#                path: key.pem
 ---
