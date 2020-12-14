@@ -35,7 +35,7 @@ function Install-Tools {
     $ProgressPreference = $OriginalPref
 
     choco install wixtoolset -y
-    setx /m PATH "%PATH%;C:\Program Files (x86)\WiX Toolset v3.11\bin"
+    echo "C:\Program Files (x86)\WiX Toolset v3.11\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
     refreshenv
 }
 
@@ -45,7 +45,7 @@ function New-MSI(
 ) {
     candle -arch x64 -dVersion="$Version" -dConfig="$Config" internal/buildscripts/packaging/msi/opentelemetry-collector.wxs
     light opentelemetry-collector.wixobj
-    mkdir dist -ErrorAction Ignore
+    mkdir dist # -ErrorAction Ignore
     Move-Item -Force opentelemetry-collector.msi dist/otel-collector-$Version-amd64.msi
 }
 
