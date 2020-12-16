@@ -1,9 +1,9 @@
 name: build-and-test
 on:
   push:
-    # branches: [MigratePublishToGHA]
     tags:
       - '*'
+    # branches: [MigratePublishToGHA]
   # pull_request:
 
 jobs:
