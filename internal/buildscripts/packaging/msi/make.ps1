@@ -15,7 +15,7 @@
 <#
 .SYNOPSIS
     Makefile like build commands for the Collector on Windows.
-    
+
     Usage:   .\make.ps1 <Command> [-<Param> <Value> ...]
     Example: .\make.ps1 New-MSI -Config "./my-config.yaml" -Version "v0.0.2"
 .PARAMETER Target
@@ -35,7 +35,11 @@ function Install-Tools {
     $ProgressPreference = $OriginalPref
 
     choco install wixtoolset -y
-    setx /m PATH "%PATH%;C:\Program Files (x86)\WiX Toolset v3.11\bin"
+    # setx /m PATH "%PATH%;C:\Program Files (x86)\WiX Toolset v3.11\bin"
+    echo "C:\Program Files (x86)\WiX Toolset v3.11\bin" >> $GITHUB_PATH
+    echo "C:\Program Files (x86)\WiX Toolset v3.11\bin" >> $PATH
+    echo "$($GITHUB_PATH)"
+    echo "$($PATH)"
     refreshenv
 }
 
@@ -43,6 +47,9 @@ function New-MSI(
     [string]$Version="0.0.1",
     [string]$Config="./examples/local/otel-config.yaml"
 ) {
+    refreshenv
+    echo "$($GITHUB_PATH)"
+    echo "$($PATH)"
     candle -arch x64 -dVersion="$Version" -dConfig="$Config" internal/buildscripts/packaging/msi/opentelemetry-collector.wxs
     light opentelemetry-collector.wixobj
     mkdir dist -ErrorAction Ignore
