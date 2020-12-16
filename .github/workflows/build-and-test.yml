@@ -229,6 +229,7 @@ jobs:
         run: tar -cvf test_results.tar testbed/tests/results
       - name: Upload test results
         if: ${{ failure() || success() }}
+        continue-on-error: true
         uses: actions/upload-artifact@v2
         with:
           name: test-results
