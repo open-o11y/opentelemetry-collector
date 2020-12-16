@@ -273,41 +273,6 @@ jobs:
         if: ${{ failure() && github.ref == 'ref/head/master' }}
         run: |
           go run cmd/issuegenerator/main.go $TEST_RESULTS
-  windows-msi:
-    runs-on: windows-latest
-    needs: [cross-compile]
-    steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-      - name: Setup Go
-        uses: actions/setup-go@v2.1.3
-        with:
-          go-version: 1.15
-      - name: Setup env
-        run: |
-          echo "GOPATH=$(go env GOPATH)" >> $GITHUB_ENV
-          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
-      - name: Download collector binaries
-        uses: actions/download-artifact@v2
-        with:
-          name: collector-binaries
-          path: ./bin
-      - run: mkdir -p dist
-      - name: Install Wix Toolset
-        run: .\internal\buildscripts\packaging\msi\make.ps1 Install-Tools
-      - name: Build MSI
-        run: |
-          $Version = if ($env:GITHUB_REF -match '^refs/tags/(\d+\.\d+\.\d+)') { $Matches[1] } else { "0.0.1" }
-          .\internal\buildscripts\packaging\msi\make.ps1 New-MSI -Version $Version
-      - name: Validate MSI
-        run: .\internal\buildscripts\packaging\msi\make.ps1 Confirm-MSI
-      - name: Upload MSI
-        uses: actions/upload-artifact@v2
-        with:
-          name: windows-msi
-          path: ./dist/*.msi
   build-package:
     runs-on: ubuntu-latest
     needs: [cross-compile]
