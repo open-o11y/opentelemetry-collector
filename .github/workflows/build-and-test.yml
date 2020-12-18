@@ -45,13 +45,6 @@ jobs:
         uses: actions/setup-go@v2.1.3
         with:
           go-version: 1.15
-      - name: Restore module cache
-        uses: actions/cache@v2
-        env:
-          cache-name: cache-go-modules
-        with:
-          path: /home/runner/go/pkg/mod
-          key: go-pkg-mod-${{ runner.os }}-${{ hashFiles('./go.mod') }}
       - name: Setup env
         run: |
           echo "GOPATH=$(go env GOPATH)" >> $GITHUB_ENV
