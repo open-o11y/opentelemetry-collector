@@ -1,7 +1,7 @@
 name: build-and-test
 on:
   push:
-    branches: [master]
+    branches: [TestPublishPR]
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
   pull_request:
@@ -148,6 +148,7 @@ jobs:
         uses: actions/download-artifact@v1
         with:
           name: tool-binaries
+      - run: echo "$(ls -al)"
       - name: Extract Tool Binaries Archive
         run: tar -xvf tool-bin.tar -C /
       - name: Build Collector for All Architectures
