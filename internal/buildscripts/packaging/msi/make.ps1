@@ -35,7 +35,11 @@ function Install-Tools {
     $ProgressPreference = $OriginalPref
 
     choco install wixtoolset -y
-    echo "C:\Program Files (x86)\WiX Toolset v3.11\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+    if(-not (Test-Path env:GITHUB_SHA)) {
+        setx /m PATH "%PATH%;C:\Program Files (x86)\WiX Toolset v3.11\bin"
+    } else {
+        echo "C:\Program Files (x86)\WiX Toolset v3.11\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+    }
     refreshenv
 }
 

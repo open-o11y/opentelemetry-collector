@@ -98,7 +98,7 @@ jobs:
         with:
           name: tool-binaries
       - name: Extract Tool Binaries Archive
-        run: tar -xvf tool-bin.tar -C /
+        run: tar -xvf tool-binaries/tool-bin.tar -C /
       - name: Lint
         run: make -j4 gochecklicense goimpi golint gomisspell
       - name: Gen Metadata
@@ -130,9 +130,8 @@ jobs:
         uses: actions/download-artifact@v1
         with:
           name: tool-binaries
-      - run: echo "$(ls -al)"
       - name: Extract Tool Binaries Archive
-        run: tar -xvf tool-bin.tar -C /
+        run: tar -xvf tool-binaries/tool-bin.tar -C /
       - name: Build Collector for All Architectures
         run: grep ^binaries-all-sys Makefile|fmt -w 1|tail -n +2|xargs make
       - name: Create Collector Binaries Archive
@@ -171,7 +170,7 @@ jobs:
         with:
           name: tool-binaries
       - name: Extract Tool Binaries Archive
-        run: tar -xvf tool-bin.tar -C /
+        run: tar -xvf tool-binaries/tool-bin.tar -C /
       - name: Install fluentbit
         if: ${{ contains(matrix.test, 'Log10kDPS') }}
         run: |
@@ -225,7 +224,7 @@ jobs:
         with:
           name: tool-binaries
       - name: Extract Tool Binaries Archive
-        run: tar -xvf tool-bin.tar -C /
+        run: tar -xvf tool-binaries/tool-bin.tar -C /
       - name: Loadtest
         run: make testbed-correctness
       - name: GitHub Issue Generator
@@ -269,8 +268,8 @@ jobs:
           name: collector-binaries
       - name: Extract Binaries Archive
         run: |
-          tar -xvf tool-bin.tar -C /
-          tar -xvf bin.tar
+          tar -xvf tool-binaries/tool-bin.tar -C /
+          tar -xvf collector-binaries/bin.tar
       - name: Set Release Tag
         id: github_tag
         run: ./.github/workflows/scripts/set_release_tag.sh
@@ -319,7 +318,7 @@ jobs:
         with:
           name: collector-binaries
       - name: Extract Binaries Archive
-        run: tar -xvf bin.tar
+        run: tar -xvf collector-binaries/bin.tar
       - name: Install Wix Toolset
         run: .\internal\buildscripts\packaging\msi\make.ps1 Install-Tools
       - name: Build MSI
@@ -328,6 +327,7 @@ jobs:
           .\internal\buildscripts\packaging\msi\make.ps1 New-MSI -Version $Version
       - name: Validate MSI
         run: .\internal\buildscripts\packaging\msi\make.ps1 Confirm-MSI
+      - run: echo "$(dir dist)"
       - name: Upload MSI
         uses: actions/upload-artifact@v1
         with:
@@ -359,8 +359,8 @@ jobs:
           name: collector-binaries
       - name: Extract Binaries Archive
         run: |
-          tar -xvf tool-bin.tar -C /
-          tar -xvf bin.tar
+          tar -xvf tool-binaries/tool-bin.tar -C /
+          tar -xvf collector-binaries/bin.tar
       - name: Download Packages
         uses: actions/download-artifact@v1
         with:
@@ -377,13 +377,13 @@ jobs:
         id: check
         run: ./.github/workflows/scripts/verify-dist-files-exist.sh
       - name: Build Docker Image
-        if: ${{ steps.check.outputs.passed }}
+        if: steps.check.outputs.passed == 'true'
         run: |
             make docker-otelcol
             docker tag otelcol:latest otel/opentelemetry-collector-dev:$GITHUB_SHA
             docker tag otelcol:latest otel/opentelemetry-collector-dev:latest
       - name: Push Docker Image
-        if: ${{ steps.check.outputs.passed }}
+        if: steps.check.outputs.passed == 'true'
         run: |
             docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
             docker push otel/opentelemetry-collector-dev:$GITHUB_SHA
@@ -417,8 +417,8 @@ jobs:
           name: collector-binaries
       - name: Extract Binaries Archive
         run: |
-          tar -xvf tool-bin.tar -C /
-          tar -xvf bin.tar
+          tar -xvf tool-binaries/tool-bin.tar -C /
+          tar -xvf collector-binaries/bin.tar
       - name: Download Packages
         uses: actions/download-artifact@v1
         with:
@@ -438,7 +438,7 @@ jobs:
         id: github_tag
         run: ./.github/workflows/scripts/set_release_tag.sh
       - name: Build Docker Image
-        if: ${{ steps.check.outputs.passed }}
+        if: steps.check.outputs.passed == 'true'
         run: |
             make docker-otelcol
             docker tag otelcol:latest otel/opentelemetry-collector:$RELEASE_TAG
@@ -446,7 +446,7 @@ jobs:
         env:
           RELEASE_TAG: ${{ steps.github_tag.outputs.tag }}
       - name: Push Docker Image
-        if: ${{ steps.check.outputs.passed }}
+        if: steps.check.outputs.passed == 'true'
         run: |
             docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
             docker push otel/opentelemetry-collector:$RELEASE_TAG
@@ -456,7 +456,7 @@ jobs:
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
           RELEASE_TAG: ${{ steps.github_tag.outputs.tag }}
       - name: Create Github Release
-        if: ${{ steps.check.outputs.passed }}
+        if: steps.check.outputs.passed == 'true'
         run: |
           cp bin/* dist/
           cd dist && shasum -a 256 * > checksums.txt
