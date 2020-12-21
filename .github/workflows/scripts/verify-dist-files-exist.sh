@@ -15,9 +15,7 @@ do
     then
         echo "$f does not exist."
         echo "::set-output name=passed::false"
-        echo "::set-output name=failed::true"
         exit 0 
     fi
 done
 echo "::set-output name=passed::true"
-echo "::set-output name=failed::false"
