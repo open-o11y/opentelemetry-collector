@@ -8,8 +8,11 @@
 
 - Change `With*Unmarshallers` signatures in Kafka exporter/receiver (#2973)
 - Rename `marshall` to `marshal` in all the occurrences (#2977)
+- Rename `ApplicationStartInfo` to `BinaryInfo`
+- Rename `ApplicationStartInfo.ExeName` to `BinaryInfo.Command`
 
 ## 💡 Enhancements 💡
+- Add `Description` to `BinaryInfo`
 
 ## 🧰 Bug fixes 🧰
 
