@@ -224,7 +224,7 @@ func checkWrapSpanForTracesExporter(t *testing.T, te component.TracesExporter, w
 			failedToSendSpans = numSpans
 		}
 
-		require.Equalf(t, sentSpans, sd.Attributes[obsreport.SentSpansKey], "SpanData %v", sd)
-		require.Equalf(t, failedToSendSpans, sd.Attributes[obsreport.FailedToSendSpansKey], "SpanData %v", sd)
+		require.Equalf(t, sentSpans, sd.Attributes[obsreport.SentSpansKey()], "SpanData %v", sd)
+		require.Equalf(t, failedToSendSpans, sd.Attributes[obsreport.FailedToSendSpansKey()], "SpanData %v", sd)
 	}
 }

@@ -117,6 +117,7 @@
 - Move `fluentbit` extension to contrib (#2795)
 - Move `configmodels` to `config` (#2808)
 - Move `fluentforward` receiver to contrib (#2723)
+- Change constants in `obsreport_exporter.go` to private (#2895)
 
 ## 💡 Enhancements 💡
 

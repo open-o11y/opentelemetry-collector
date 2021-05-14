@@ -209,7 +209,7 @@ func checkWrapSpanForLogsExporter(t *testing.T, le component.LogsExporter, wantE
 			sentLogRecords = 0
 			failedToSendLogRecords = numLogRecords
 		}
-		require.Equalf(t, sentLogRecords, sd.Attributes[obsreport.SentLogRecordsKey], "SpanData %v", sd)
-		require.Equalf(t, failedToSendLogRecords, sd.Attributes[obsreport.FailedToSendLogRecordsKey], "SpanData %v", sd)
+		require.Equalf(t, sentLogRecords, sd.Attributes[obsreport.SentLogRecordsKey()], "SpanData %v", sd)
+		require.Equalf(t, failedToSendLogRecords, sd.Attributes[obsreport.FailedToSendLogRecordsKey()], "SpanData %v", sd)
 	}
 }

@@ -229,7 +229,7 @@ func checkWrapSpanForMetricsExporter(t *testing.T, me component.MetricsExporter,
 			sentMetricPoints = 0
 			failedToSendMetricPoints = numMetricPoints
 		}
-		require.Equalf(t, sentMetricPoints, sd.Attributes[obsreport.SentMetricPointsKey], "SpanData %v", sd)
-		require.Equalf(t, failedToSendMetricPoints, sd.Attributes[obsreport.FailedToSendMetricPointsKey], "SpanData %v", sd)
+		require.Equalf(t, sentMetricPoints, sd.Attributes[obsreport.SentMetricPointsKey()], "SpanData %v", sd)
+		require.Equalf(t, failedToSendMetricPoints, sd.Attributes[obsreport.FailedToSendMetricPointsKey()], "SpanData %v", sd)
 	}
 }

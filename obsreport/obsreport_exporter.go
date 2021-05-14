@@ -27,28 +27,63 @@ import (
 
 const (
 	// ExporterKey used to identify exporters in metrics and traces.
-	ExporterKey = "exporter"
+	exporterKey = "exporter"
 
 	// SentSpansKey used to track spans sent by exporters.
-	SentSpansKey = "sent_spans"
+	sentSpansKey = "sent_spans"
 	// FailedToSendSpansKey used to track spans that failed to be sent by exporters.
-	FailedToSendSpansKey = "send_failed_spans"
+	failedToSendSpansKey = "send_failed_spans"
 
 	// SentMetricPointsKey used to track metric points sent by exporters.
-	SentMetricPointsKey = "sent_metric_points"
+	sentMetricPointsKey = "sent_metric_points"
 	// FailedToSendMetricPointsKey used to track metric points that failed to be sent by exporters.
-	FailedToSendMetricPointsKey = "send_failed_metric_points"
+	failedToSendMetricPointsKey = "send_failed_metric_points"
 
 	// SentLogRecordsKey used to track logs sent by exporters.
-	SentLogRecordsKey = "sent_log_records"
+	sentLogRecordsKey = "sent_log_records"
 	// FailedToSendLogRecordsKey used to track logs that failed to be sent by exporters.
-	FailedToSendLogRecordsKey = "send_failed_log_records"
+	failedToSendLogRecordsKey = "send_failed_log_records"
 )
 
-var (
-	tagKeyExporter, _ = tag.NewKey(ExporterKey)
+// ExporterKey returns the exporterKey
+func ExporterKey() string {
+	return exporterKey
+}
 
-	exporterPrefix                 = ExporterKey + nameSep
+// SentSpansKey returns the sentSpansKey
+func SentSpansKey() string {
+	return sentSpansKey
+}
+
+// FailedToSendSpansKey returns the failedToSendSpansKey
+func FailedToSendSpansKey() string {
+	return failedToSendSpansKey
+}
+
+// SentMetricPointsKey returns the sentMetricPointsKey
+func SentMetricPointsKey() string {
+	return sentMetricPointsKey
+}
+
+// FailedToSendMetricPointsKey returns the failedToSendMetricPointsKey
+func FailedToSendMetricPointsKey() string {
+	return failedToSendMetricPointsKey
+}
+
+// SentLogRecordsKey returns the sentLogrecordsKey
+func SentLogRecordsKey() string {
+	return sentLogRecordsKey
+}
+
+// FailedToSendLogRecordsKey returns the failedToSendLogRecordsKey
+func FailedToSendLogRecordsKey() string {
+	return failedToSendLogRecordsKey
+}
+
+var (
+	tagKeyExporter, _ = tag.NewKey(exporterKey)
+
+	exporterPrefix                 = exporterKey + nameSep
 	exportTraceDataOperationSuffix = nameSep + "traces"
 	exportMetricsOperationSuffix   = nameSep + "metrics"
 	exportLogsOperationSuffix      = nameSep + "logs"
@@ -59,27 +94,27 @@ var (
 	// that result in a different number of elements should be reported in a
 	// separate way.
 	mExporterSentSpans = stats.Int64(
-		exporterPrefix+SentSpansKey,
+		exporterPrefix+sentSpansKey,
 		"Number of spans successfully sent to destination.",
 		stats.UnitDimensionless)
 	mExporterFailedToSendSpans = stats.Int64(
-		exporterPrefix+FailedToSendSpansKey,
+		exporterPrefix+failedToSendSpansKey,
 		"Number of spans in failed attempts to send to destination.",
 		stats.UnitDimensionless)
 	mExporterSentMetricPoints = stats.Int64(
-		exporterPrefix+SentMetricPointsKey,
+		exporterPrefix+sentMetricPointsKey,
 		"Number of metric points successfully sent to destination.",
 		stats.UnitDimensionless)
 	mExporterFailedToSendMetricPoints = stats.Int64(
-		exporterPrefix+FailedToSendMetricPointsKey,
+		exporterPrefix+failedToSendMetricPointsKey,
 		"Number of metric points in failed attempts to send to destination.",
 		stats.UnitDimensionless)
 	mExporterSentLogRecords = stats.Int64(
-		exporterPrefix+SentLogRecordsKey,
+		exporterPrefix+sentLogRecordsKey,
 		"Number of log record successfully sent to destination.",
 		stats.UnitDimensionless)
 	mExporterFailedToSendLogRecords = stats.Int64(
-		exporterPrefix+FailedToSendLogRecordsKey,
+		exporterPrefix+failedToSendLogRecordsKey,
 		"Number of log records in failed attempts to send to destination.",
 		stats.UnitDimensionless)
 )
@@ -117,7 +152,7 @@ func (eor *Exporter) StartTracesExportOp(ctx context.Context) context.Context {
 func (eor *Exporter) EndTracesExportOp(ctx context.Context, numSpans int, err error) {
 	numSent, numFailedToSend := toNumItems(numSpans, err)
 	eor.recordMetrics(ctx, numSent, numFailedToSend, mExporterSentSpans, mExporterFailedToSendSpans)
-	endSpan(ctx, err, numSent, numFailedToSend, SentSpansKey, FailedToSendSpansKey)
+	endSpan(ctx, err, numSent, numFailedToSend, sentSpansKey, failedToSendSpansKey)
 }
 
 // StartMetricsExportOp is called at the start of an Export operation.
@@ -132,7 +167,7 @@ func (eor *Exporter) StartMetricsExportOp(ctx context.Context) context.Context {
 func (eor *Exporter) EndMetricsExportOp(ctx context.Context, numMetricPoints int, err error) {
 	numSent, numFailedToSend := toNumItems(numMetricPoints, err)
 	eor.recordMetrics(ctx, numSent, numFailedToSend, mExporterSentMetricPoints, mExporterFailedToSendMetricPoints)
-	endSpan(ctx, err, numSent, numFailedToSend, SentMetricPointsKey, FailedToSendMetricPointsKey)
+	endSpan(ctx, err, numSent, numFailedToSend, sentMetricPointsKey, failedToSendMetricPointsKey)
 }
 
 // StartLogsExportOp is called at the start of an Export operation.
@@ -146,7 +181,7 @@ func (eor *Exporter) StartLogsExportOp(ctx context.Context) context.Context {
 func (eor *Exporter) EndLogsExportOp(ctx context.Context, numLogRecords int, err error) {
 	numSent, numFailedToSend := toNumItems(numLogRecords, err)
 	eor.recordMetrics(ctx, numSent, numFailedToSend, mExporterSentLogRecords, mExporterFailedToSendLogRecords)
-	endSpan(ctx, err, numSent, numFailedToSend, SentLogRecordsKey, FailedToSendLogRecordsKey)
+	endSpan(ctx, err, numSent, numFailedToSend, sentLogRecordsKey, failedToSendLogRecordsKey)
 }
 
 // startSpan creates the span used to trace the operation. Returning

@@ -358,13 +358,13 @@ func TestExportTraceDataOp(t *testing.T) {
 		switch errs[i] {
 		case nil:
 			sentSpans += numExportedSpans[i]
-			assert.Equal(t, int64(numExportedSpans[i]), span.Attributes[obsreport.SentSpansKey])
-			assert.Equal(t, int64(0), span.Attributes[obsreport.FailedToSendSpansKey])
+			assert.Equal(t, int64(numExportedSpans[i]), span.Attributes[obsreport.SentSpansKey()])
+			assert.Equal(t, int64(0), span.Attributes[obsreport.FailedToSendSpansKey()])
 			assert.Equal(t, trace.Status{Code: trace.StatusCodeOK}, span.Status)
 		case errFake:
 			failedToSendSpans += numExportedSpans[i]
-			assert.Equal(t, int64(0), span.Attributes[obsreport.SentSpansKey])
-			assert.Equal(t, int64(numExportedSpans[i]), span.Attributes[obsreport.FailedToSendSpansKey])
+			assert.Equal(t, int64(0), span.Attributes[obsreport.SentSpansKey()])
+			assert.Equal(t, int64(numExportedSpans[i]), span.Attributes[obsreport.FailedToSendSpansKey()])
 			assert.Equal(t, errs[i].Error(), span.Status.Message)
 		default:
 			t.Fatalf("unexpected error: %v", errs[i])
@@ -407,13 +407,13 @@ func TestExportMetricsOp(t *testing.T) {
 		switch errs[i] {
 		case nil:
 			sentMetricPoints += toSendMetricPoints[i]
-			assert.Equal(t, int64(toSendMetricPoints[i]), span.Attributes[obsreport.SentMetricPointsKey])
-			assert.Equal(t, int64(0), span.Attributes[obsreport.FailedToSendMetricPointsKey])
+			assert.Equal(t, int64(toSendMetricPoints[i]), span.Attributes[obsreport.SentMetricPointsKey()])
+			assert.Equal(t, int64(0), span.Attributes[obsreport.FailedToSendMetricPointsKey()])
 			assert.Equal(t, trace.Status{Code: trace.StatusCodeOK}, span.Status)
 		case errFake:
 			failedToSendMetricPoints += toSendMetricPoints[i]
-			assert.Equal(t, int64(0), span.Attributes[obsreport.SentMetricPointsKey])
-			assert.Equal(t, int64(toSendMetricPoints[i]), span.Attributes[obsreport.FailedToSendMetricPointsKey])
+			assert.Equal(t, int64(0), span.Attributes[obsreport.SentMetricPointsKey()])
+			assert.Equal(t, int64(toSendMetricPoints[i]), span.Attributes[obsreport.FailedToSendMetricPointsKey()])
 			assert.Equal(t, errs[i].Error(), span.Status.Message)
 		default:
 			t.Fatalf("unexpected error: %v", errs[i])
@@ -455,13 +455,13 @@ func TestExportLogsOp(t *testing.T) {
 		switch errs[i] {
 		case nil:
 			sentLogRecords += toSendLogRecords[i]
-			assert.Equal(t, int64(toSendLogRecords[i]), span.Attributes[obsreport.SentLogRecordsKey])
-			assert.Equal(t, int64(0), span.Attributes[obsreport.FailedToSendLogRecordsKey])
+			assert.Equal(t, int64(toSendLogRecords[i]), span.Attributes[obsreport.SentLogRecordsKey()])
+			assert.Equal(t, int64(0), span.Attributes[obsreport.FailedToSendLogRecordsKey()])
 			assert.Equal(t, trace.Status{Code: trace.StatusCodeOK}, span.Status)
 		case errFake:
 			failedToSendLogRecords += toSendLogRecords[i]
-			assert.Equal(t, int64(0), span.Attributes[obsreport.SentLogRecordsKey])
-			assert.Equal(t, int64(toSendLogRecords[i]), span.Attributes[obsreport.FailedToSendLogRecordsKey])
+			assert.Equal(t, int64(0), span.Attributes[obsreport.SentLogRecordsKey()])
+			assert.Equal(t, int64(toSendLogRecords[i]), span.Attributes[obsreport.FailedToSendLogRecordsKey()])
 			assert.Equal(t, errs[i].Error(), span.Status.Message)
 		default:
 			t.Fatalf("unexpected error: %v", errs[i])
