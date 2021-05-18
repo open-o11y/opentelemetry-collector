@@ -59,6 +59,9 @@ func (r *pReceiver) Start(_ context.Context, host component.Host) error {
 
 	discoveryManager := discovery.NewManager(discoveryCtx, logger)
 	discoveryCfg := make(map[string]discovery.Configs)
+
+	// Add logic for scrape target update
+
 	for _, scrapeConfig := range r.cfg.PrometheusConfig.ScrapeConfigs {
 		discoveryCfg[scrapeConfig.JobName] = scrapeConfig.ServiceDiscoveryConfigs
 	}
