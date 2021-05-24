@@ -1,6 +1,7 @@
 name: Update OpenTelemetry Website Docs
 
 on:
+  release:
   # triggers only on a manual dispatch
   workflow_dispatch:
 
