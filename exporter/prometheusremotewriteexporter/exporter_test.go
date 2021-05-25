@@ -37,8 +37,8 @@ import (
 	"go.opentelemetry.io/collector/internal/testdata"
 )
 
-// Test_ NewPrwExporter checks that a new exporter instance with non-nil fields is initialized
-func Test_NewPrwExporter(t *testing.T) {
+// Test_NewPRWExporter checks that a new exporter instance with non-nil fields is initialized
+func Test_NewPRWExporter(t *testing.T) {
 	cfg := &Config{
 		ExporterSettings:   config.NewExporterSettings(config.NewID(typeStr)),
 		TimeoutSettings:    exporterhelper.TimeoutSettings{},
@@ -71,17 +71,6 @@ func Test_NewPrwExporter(t *testing.T) {
 			5,
 			map[string]string{"Key1": "Val1"},
 			http.DefaultClient,
-			true,
-			buildInfo,
-		},
-		{
-			"nil_client",
-			cfg,
-			"test",
-			"http://some.url:9411/api/prom/push",
-			5,
-			map[string]string{"Key1": "Val1"},
-			nil,
 			true,
 			buildInfo,
 		},
@@ -122,7 +111,12 @@ func Test_NewPrwExporter(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			prwe, err := NewPrwExporter(tt.namespace, tt.endpoint, tt.client, tt.externalLabels, 1, tt.buildInfo)
+			cfg.HTTPClientSettings.Endpoint = tt.endpoint
+			cfg.ExternalLabels = tt.externalLabels
+			cfg.Namespace = tt.namespace
+			cfg.RemoteWriteQueue.NumConsumers = 1
+			prwe, err := NewPRWExporter(cfg, tt.buildInfo)
+
 			if tt.returnError {
 				assert.Error(t, err)
 				return
@@ -141,7 +135,7 @@ func Test_NewPrwExporter(t *testing.T) {
 
 // Test_Shutdown checks after Shutdown is called, incoming calls to PushMetrics return error.
 func Test_Shutdown(t *testing.T) {
-	prwe := &PrwExporter{
+	prwe := &PRWExporter{
 		wg:        new(sync.WaitGroup),
 		closeChan: make(chan struct{}),
 	}
@@ -258,14 +252,16 @@ func runExportPipeline(ts *prompb.TimeSeries, endpoint *url.URL) []error {
 	testmap := make(map[string]*prompb.TimeSeries)
 	testmap["test"] = ts
 
-	HTTPClient := http.DefaultClient
+	cfg := createDefaultConfig().(*Config)
+	cfg.HTTPClientSettings.Endpoint = endpoint.String()
+	cfg.RemoteWriteQueue.NumConsumers = 1
 
 	buildInfo := component.BuildInfo{
 		Description: "OpenTelemetry Collector",
 		Version:     "1.0",
 	}
 	// after this, instantiate a CortexExporter with the current HTTP client and endpoint set to passed in endpoint
-	prwe, err := NewPrwExporter("test", endpoint.String(), HTTPClient, map[string]string{}, 1, buildInfo)
+	prwe, err := NewPRWExporter(cfg, buildInfo)
 	if err != nil {
 		errs = append(errs, err)
 		return errs
@@ -499,28 +495,25 @@ func Test_PushMetrics(t *testing.T) {
 
 			defer server.Close()
 
-			serverURL, uErr := url.Parse(server.URL)
-			assert.NoError(t, uErr)
-
-			config := &Config{
+			cfg := &Config{
 				ExporterSettings: config.NewExporterSettings(config.NewID(typeStr)),
 				Namespace:        "",
 				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "http://some.url:9411/api/prom/push",
+					Endpoint: server.URL,
 					// We almost read 0 bytes, so no need to tune ReadBufferSize.
 					ReadBufferSize:  0,
 					WriteBufferSize: 512 * 1024,
 				},
+				RemoteWriteQueue: RemoteWriteQueue{NumConsumers: 5},
 			}
-			assert.NotNil(t, config)
+			assert.NotNil(t, cfg)
 			// c, err := config.HTTPClientSettings.ToClient()
 			// assert.Nil(t, err)
-			c := http.DefaultClient
 			buildInfo := component.BuildInfo{
 				Description: "OpenTelemetry Collector",
 				Version:     "1.0",
 			}
-			prwe, nErr := NewPrwExporter(config.Namespace, serverURL.String(), c, map[string]string{}, 5, buildInfo)
+			prwe, nErr := NewPRWExporter(cfg, buildInfo)
 			require.NoError(t, nErr)
 			err := prwe.PushMetrics(context.Background(), *tt.md)
 			if tt.returnErr {

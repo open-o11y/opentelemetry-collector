@@ -5,6 +5,11 @@
 ## 🛑 Breaking changes 🛑
 
 - Remove unused logstest package (#3222)
+- Introduce `AppSettings` instead of `Parameters` (#3163)
+
+## 💡 Enhancements 💡
+
+- Add `doc.go` files to the consumer package and its subpackages (#3270)
 
 ## v0.27.0 Beta
 
@@ -33,6 +38,7 @@
 - Add an internal sharedcomponent to be shared by receivers with shared resources (#3198)
 - Allow users to configure the Prometheus remote write queue (#3046)
 - Mark internaldata traces translation as deprecated for external usage (#3176)
+- Change receiver obsreport helpers pattern to match the Processor/Exporter (#3227)
 
 ## 🧰 Bug fixes 🧰
 
