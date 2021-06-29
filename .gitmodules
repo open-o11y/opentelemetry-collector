@@ -1,3 +1,6 @@
 [submodule "model/internal/opentelemetry-proto"]
 	path = model/internal/opentelemetry-proto
 	url = https://github.com/open-telemetry/opentelemetry-proto
+[submodule "examples/prw-test/prometheus-sample-app"]
+	path = examples/prw-test/prometheus-sample-app
+	url = https://github.com/open-o11y/prometheus-sample-app.git
