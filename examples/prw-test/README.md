@@ -10,8 +10,7 @@ OpenTelemetry Collectors deployed:
 - The agent then forwards the data to Collector(s) that receive data from
  multiple agents. Collectors on this layer typically are allowed to use more
  resources and queue more data;
-- The Collector then sends the data to the appropriate backend, in this demo
- Jaeger, Zipkin, and Prometheus;
+- The Collector then sends the data to the appropriate backend, in this demo, Prometheus;
 
 This demo uses `docker-compose` and by default runs against the 
 `otel/opentelemetry-collector-dev:latest` image. To run the demo, switch
@@ -23,9 +22,7 @@ docker-compose up -d
 
 The demo exposes the following backends:
 
-- Jaeger at http://0.0.0.0:16686
-- Zipkin at http://0.0.0.0:9411
-- Prometheus at http://0.0.0.0:9090 
+- Prometheus at http://0.0.0.0:9090/  (or http://0.0.0.0:9090/metrics for all metrics)
 
 Notes:
 

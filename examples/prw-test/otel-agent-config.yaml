@@ -14,11 +14,7 @@ exporters:
 processors:
   batch:
 
-extensions:
-  health_check:
-
 service:
-  extensions: [health_check]
   pipelines:
     metrics:
       receivers: [otlp, opencensus]
