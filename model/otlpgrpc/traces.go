@@ -46,12 +46,30 @@ func NewTracesRequest() TracesRequest {
 	return TracesRequest{orig: &otlpcollectortrace.ExportTraceServiceRequest{}}
 }
 
-func (lr TracesRequest) SetTraces(ld pdata.Traces) {
-	lr.orig.ResourceSpans = internal.TracesToOtlp(ld.InternalRep()).ResourceSpans
+func (tr TracesRequest) SetTraces(ld pdata.Traces) {
+	tr.orig.ResourceSpans = internal.TracesToOtlp(ld.InternalRep()).ResourceSpans
 }
 
-func (lr TracesRequest) Traces() pdata.Traces {
-	return pdata.TracesFromInternalRep(internal.TracesFromOtlp(lr.orig))
+func (tr TracesRequest) Traces() pdata.Traces {
+	return pdata.TracesFromInternalRep(internal.TracesFromOtlp(tr.orig))
+}
+
+func (tr TracesRequest) MarshalTracesRequest(td pdata.Traces) ([]byte, error) {
+	tr.orig.ResourceSpans = internal.TracesToOtlp(td.InternalRep()).ResourceSpans
+	return tr.orig.Marshal()
+}
+
+func (tr TracesRequest) UnmarshalTracesRequest(buf []byte) (pdata.Traces, error) {
+	err := tr.orig.Unmarshal(buf)
+	return pdata.TracesFromInternalRep(internal.TracesFromOtlp(tr.orig)), err
+}
+
+func (trp TracesResponse) MarshalTracesResponse() ([]byte, error) {
+	return trp.orig.Marshal()
+}
+
+func (trp TracesResponse) UnmarshalTracesResponse(buf []byte) error {
+	return trp.orig.Unmarshal(buf)
 }
 
 // TracesClient is the client API for OTLP-GRPC Traces service.

@@ -54,6 +54,24 @@ func (lr LogsRequest) Logs() pdata.Logs {
 	return pdata.LogsFromInternalRep(internal.LogsFromOtlp(lr.orig))
 }
 
+func (lr LogsRequest) MarshalLogsRequest(ld pdata.Logs) ([]byte, error) {
+	lr.orig.ResourceLogs = internal.LogsToOtlp(ld.InternalRep()).ResourceLogs
+	return lr.orig.Marshal()
+}
+
+func (lr LogsRequest) UnmarshalLogsRequest(buf []byte) (pdata.Logs, error) {
+	err := lr.orig.Unmarshal(buf)
+	return pdata.LogsFromInternalRep(internal.LogsFromOtlp(lr.orig)), err
+}
+
+func (lrp LogsResponse) MarshalLogsResponse() ([]byte, error) {
+	return lrp.orig.Marshal()
+}
+
+func (lrp LogsResponse) UnmarshalLogsResponse(buf []byte) error {
+	return lrp.orig.Unmarshal(buf)
+}
+
 // LogsClient is the client API for OTLP-GRPC Logs service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.

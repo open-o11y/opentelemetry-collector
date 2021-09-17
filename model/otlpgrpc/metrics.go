@@ -46,12 +46,30 @@ func NewMetricsRequest() MetricsRequest {
 	return MetricsRequest{orig: &otlpcollectormetrics.ExportMetricsServiceRequest{}}
 }
 
-func (lr MetricsRequest) SetMetrics(ld pdata.Metrics) {
-	lr.orig.ResourceMetrics = internal.MetricsToOtlp(ld.InternalRep()).ResourceMetrics
+func (mr MetricsRequest) SetMetrics(ld pdata.Metrics) {
+	mr.orig.ResourceMetrics = internal.MetricsToOtlp(ld.InternalRep()).ResourceMetrics
 }
 
-func (lr MetricsRequest) Metrics() pdata.Metrics {
-	return pdata.MetricsFromInternalRep(internal.MetricsFromOtlp(lr.orig))
+func (mr MetricsRequest) Metrics() pdata.Metrics {
+	return pdata.MetricsFromInternalRep(internal.MetricsFromOtlp(mr.orig))
+}
+
+func (mr MetricsRequest) MarshalMetricsRequest(md pdata.Metrics) ([]byte, error) {
+	mr.orig.ResourceMetrics = internal.MetricsToOtlp(md.InternalRep()).ResourceMetrics
+	return mr.orig.Marshal()
+}
+
+func (mr MetricsRequest) UnmarshalMetricsRequest(buf []byte) (pdata.Metrics, error) {
+	err := mr.orig.Unmarshal(buf)
+	return pdata.MetricsFromInternalRep(internal.MetricsFromOtlp(mr.orig)), err
+}
+
+func (mrp MetricsResponse) MarshalMetricsResponse() ([]byte, error) {
+	return mrp.orig.Marshal()
+}
+
+func (mrp MetricsResponse) UnmarshalMetricsResponse(buf []byte) error {
+	return mrp.orig.Unmarshal(buf)
 }
 
 // MetricsClient is the client API for OTLP-GRPC Metrics service.
