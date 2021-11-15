@@ -26,14 +26,41 @@ import (
 	"golang.org/x/sys/windows/svc"
 
 	"go.opentelemetry.io/collector/component"
-	"go.opentelemetry.io/collector/service/defaultcomponents"
+	"go.opentelemetry.io/collector/exporter/otlpexporter"
+	"go.opentelemetry.io/collector/extension/zpagesextension"
+	"go.opentelemetry.io/collector/processor/batchprocessor"
+	"go.opentelemetry.io/collector/receiver/otlpreceiver"
 )
 
 func TestWindowsService_Execute(t *testing.T) {
 	os.Args = []string{"otelcol", "--config", "testdata/otelcol-config.yaml"}
 
-	factories, err := defaultcomponents.Components()
+	receivers, err := component.MakeReceiverFactoryMap(
+		otlpreceiver.NewFactory(),
+	)
 	require.NoError(t, err)
+
+	processors, err := component.MakeProcessorFactoryMap(
+		batchprocessor.NewFactory(),
+	)
+	require.NoError(t, err)
+
+	exporters, err := component.MakeExporterFactoryMap(
+		otlpexporter.NewFactory(),
+	)
+	require.NoError(t, err)
+
+	extensions, err := component.MakeExtensionFactoryMap(
+		zpagesextension.NewFactory(),
+	)
+	require.NoError(t, err)
+
+	factories := component.Factories{
+		Receivers:  receivers,
+		Processors: processors,
+		Exporters:  exporters,
+		Extensions: extensions,
+	}
 
 	s := NewWindowsService(CollectorSettings{BuildInfo: component.NewDefaultBuildInfo(), Factories: factories})
 
