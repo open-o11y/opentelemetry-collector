@@ -34,11 +34,8 @@ import (
 
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/config/configmapprovider"
-	"go.opentelemetry.io/collector/exporter/otlpexporter"
-	"go.opentelemetry.io/collector/extension/zpagesextension"
+	"go.opentelemetry.io/collector/internal/testcomponents"
 	"go.opentelemetry.io/collector/internal/testutil"
-	"go.opentelemetry.io/collector/processor/batchprocessor"
-	"go.opentelemetry.io/collector/receiver/otlpreceiver"
 )
 
 const configStr = `
@@ -69,26 +66,8 @@ func TestCollector_StartAsGoRoutine(t *testing.T) {
 	collectorTelemetry = &colTelemetry{}
 	defer func() { collectorTelemetry = preservedAppTelemetry }()
 
-	receivers, err := component.MakeReceiverFactoryMap(
-		otlpreceiver.NewFactory(),
-	)
+	factories, err := testcomponents.OtelColConfigComponents()
 	require.NoError(t, err)
-
-	processors, err := component.MakeProcessorFactoryMap(
-		batchprocessor.NewFactory(),
-	)
-	require.NoError(t, err)
-
-	exporters, err := component.MakeExporterFactoryMap(
-		otlpexporter.NewFactory(),
-	)
-	require.NoError(t, err)
-
-	factories := component.Factories{
-		Receivers:  receivers,
-		Processors: processors,
-		Exporters:  exporters,
-	}
 
 	set := CollectorSettings{
 		BuildInfo:         component.NewDefaultBuildInfo(),
@@ -118,32 +97,8 @@ func TestCollector_StartAsGoRoutine(t *testing.T) {
 }
 
 func TestCollector_Start(t *testing.T) {
-	receivers, err := component.MakeReceiverFactoryMap(
-		otlpreceiver.NewFactory(),
-	)
+	factories, err := testcomponents.OtelColConfigComponents()
 	require.NoError(t, err)
-
-	processors, err := component.MakeProcessorFactoryMap(
-		batchprocessor.NewFactory(),
-	)
-	require.NoError(t, err)
-
-	exporters, err := component.MakeExporterFactoryMap(
-		otlpexporter.NewFactory(),
-	)
-	require.NoError(t, err)
-
-	extensions, err := component.MakeExtensionFactoryMap(
-		zpagesextension.NewFactory(),
-	)
-	require.NoError(t, err)
-
-	factories := component.Factories{
-		Receivers:  receivers,
-		Processors: processors,
-		Exporters:  exporters,
-		Extensions: extensions,
-	}
 
 	loggingHookCalled := false
 	hook := func(entry zapcore.Entry) error {
@@ -212,32 +167,8 @@ func TestCollector_ReportError(t *testing.T) {
 	collectorTelemetry = &mockColTelemetry{}
 	defer func() { collectorTelemetry = preservedAppTelemetry }()
 
-	receivers, err := component.MakeReceiverFactoryMap(
-		otlpreceiver.NewFactory(),
-	)
+	factories, err := testcomponents.OtelColConfigComponents()
 	require.NoError(t, err)
-
-	processors, err := component.MakeProcessorFactoryMap(
-		batchprocessor.NewFactory(),
-	)
-	require.NoError(t, err)
-
-	exporters, err := component.MakeExporterFactoryMap(
-		otlpexporter.NewFactory(),
-	)
-	require.NoError(t, err)
-
-	extensions, err := component.MakeExtensionFactoryMap(
-		zpagesextension.NewFactory(),
-	)
-	require.NoError(t, err)
-
-	factories := component.Factories{
-		Receivers:  receivers,
-		Processors: processors,
-		Exporters:  exporters,
-		Extensions: extensions,
-	}
 
 	col, err := New(CollectorSettings{
 		BuildInfo:         component.NewDefaultBuildInfo(),
