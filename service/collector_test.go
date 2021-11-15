@@ -34,8 +34,8 @@ import (
 
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/config/configmapprovider"
-	"go.opentelemetry.io/collector/internal/testcomponents"
 	"go.opentelemetry.io/collector/internal/testutil"
+	"go.opentelemetry.io/collector/service/testdata"
 )
 
 const configStr = `
@@ -66,7 +66,7 @@ func TestCollector_StartAsGoRoutine(t *testing.T) {
 	collectorTelemetry = &colTelemetry{}
 	defer func() { collectorTelemetry = preservedAppTelemetry }()
 
-	factories, err := testcomponents.OtelColConfigComponents()
+	factories, err := testdata.OtelColConfigComponents()
 	require.NoError(t, err)
 
 	set := CollectorSettings{
@@ -97,7 +97,7 @@ func TestCollector_StartAsGoRoutine(t *testing.T) {
 }
 
 func TestCollector_Start(t *testing.T) {
-	factories, err := testcomponents.OtelColConfigComponents()
+	factories, err := testdata.OtelColConfigComponents()
 	require.NoError(t, err)
 
 	loggingHookCalled := false
@@ -167,7 +167,7 @@ func TestCollector_ReportError(t *testing.T) {
 	collectorTelemetry = &mockColTelemetry{}
 	defer func() { collectorTelemetry = preservedAppTelemetry }()
 
-	factories, err := testcomponents.OtelColConfigComponents()
+	factories, err := testdata.OtelColConfigComponents()
 	require.NoError(t, err)
 
 	col, err := New(CollectorSettings{
