@@ -34,28 +34,26 @@ import (
 
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/config/configmapprovider"
+	"go.opentelemetry.io/collector/internal/testcomponents"
 	"go.opentelemetry.io/collector/internal/testutil"
-	"go.opentelemetry.io/collector/service/testdata"
 )
 
 const configStr = `
 receivers:
-  otlp:
-    protocols:
-      grpc:
-exporters:
-  otlp:
-    endpoint: "localhost:4317"
+  examplereceiver:
 processors:
-  batch:
+  exampleprocessor:
+exporters:
+  exampleexporter:
 extensions:
+  exampleextension:
 service:
-  extensions:
+  extensions: [exampleextension]
   pipelines:
     traces:
-      receivers: [otlp]
-      processors: [batch]
-      exporters: [otlp]
+      receivers: [examplereceiver]
+      processors: [exampleprocessor]
+      exporters: [exampleexporter]
 `
 
 // TestCollector_StartAsGoRoutine must be the first unit test on the file,
@@ -66,7 +64,7 @@ func TestCollector_StartAsGoRoutine(t *testing.T) {
 	collectorTelemetry = &colTelemetry{}
 	defer func() { collectorTelemetry = preservedAppTelemetry }()
 
-	factories, err := testdata.OtelColConfigComponents()
+	factories, err := testcomponents.ExampleComponents()
 	require.NoError(t, err)
 
 	set := CollectorSettings{
@@ -97,7 +95,7 @@ func TestCollector_StartAsGoRoutine(t *testing.T) {
 }
 
 func TestCollector_Start(t *testing.T) {
-	factories, err := testdata.OtelColConfigComponents()
+	factories, err := testcomponents.OtelColConfigComponents()
 	require.NoError(t, err)
 
 	loggingHookCalled := false
@@ -167,13 +165,13 @@ func TestCollector_ReportError(t *testing.T) {
 	collectorTelemetry = &mockColTelemetry{}
 	defer func() { collectorTelemetry = preservedAppTelemetry }()
 
-	factories, err := testdata.OtelColConfigComponents()
+	factories, err := testcomponents.ExampleComponents()
 	require.NoError(t, err)
 
 	col, err := New(CollectorSettings{
 		BuildInfo:         component.NewDefaultBuildInfo(),
 		Factories:         factories,
-		ConfigMapProvider: configmapprovider.NewFile("testdata/otelcol-config.yaml"),
+		ConfigMapProvider: configmapprovider.NewInMemory(strings.NewReader(configStr)),
 	})
 	require.NoError(t, err)
 
