@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+## v0.40.0 Beta
+
+## 🛑 Breaking changes 🛑
+
+- Package `client` refactored (#4416) and auth data included in it (#4422). Final PR to be merged in the next release (#4423)
+- Remove `pdata.AttributeMap.InitFromMap` (#4429)
+- Updated configgrpc `ToDialOptions` to support passing providers to instrumentation library (#4451)
+- Make state information propagation non-blocking on the collector (#4460)
+
+## 💡 Enhancements 💡
+
+- Add semconv 1.7.0 and 1.8.0 (#4452)
+- Added `feature-gates` CLI flag for controlling feature gate state. (#4368)
+
+## v0.39.0 Beta
+
 ## 🛑 Breaking changes 🛑
 
 - Remove deprecated config (already no-op) `ballast_size_mib` in memorylimiterprocessor (#4365)
@@ -27,6 +43,7 @@
 
 ## 💡 Enhancements 💡
 - Supports more compression methods(`snappy` and `zstd`) for configgrpc, in addition to current `gzip` (#4088)
+- Moved the OpenTelemetry Collector Builder to core (#4307)
 
 ## 🧰 Bug fixes 🧰
 

@@ -3,7 +3,7 @@ name: Builder - Release
 on:
   push:
     tags:
-      - 'v*'
+      - 'cmd/builder/v*'
 
 jobs:
   goreleaser:
@@ -25,8 +25,7 @@ jobs:
         with:
           distribution: goreleaser-pro
           version: latest
-          args: release --rm-dist
-          workdir: cmd/builder
+          args: release --rm-dist -f cmd/builder/.goreleaser.yml
         env:
           GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
