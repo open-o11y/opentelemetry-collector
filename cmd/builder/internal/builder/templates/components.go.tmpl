@@ -5,8 +5,8 @@ package main
 import (
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/consumer/consumererror"
-	{{- if .Distribution.IncludeCore}}
-	"go.opentelemetry.io/collector/service/defaultcomponents"
+	{{- if .Distribution.IncludeTestComponents}}
+	"go.opentelemetry.io/collector/internal/testcomponents"
 	{{- end}}
 
 	// extensions
@@ -35,8 +35,8 @@ func components() (component.Factories, error) {
 	var err error
 	var factories component.Factories
 
-	{{- if .Distribution.IncludeCore}}
-	factories, err = defaultcomponents.Components()
+	{{- if .Distribution.IncludeTestComponents}}
+	factories, err = testcomponents.ExampleComponents()
 	if err != nil {
 		return component.Factories{}, err
 	}

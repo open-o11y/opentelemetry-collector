@@ -49,14 +49,14 @@ type Config struct {
 
 // Distribution holds the parameters for the final binary
 type Distribution struct {
-	Module         string `mapstructure:"module"`
-	Name           string `mapstructure:"name"`
-	Go             string `mapstructure:"go"`
-	Description    string `mapstructure:"description"`
-	OtelColVersion string `mapstructure:"otelcol_version"`
-	IncludeCore    bool   `mapstructure:"include_core"`
-	OutputPath     string `mapstructure:"output_path"`
-	Version        string `mapstructure:"version"`
+	Module                string `mapstructure:"module"`
+	Name                  string `mapstructure:"name"`
+	Go                    string `mapstructure:"go"`
+	Description           string `mapstructure:"description"`
+	OtelColVersion        string `mapstructure:"otelcol_version"`
+	IncludeTestComponents bool   `mapstructure:"include_test_components"`
+	OutputPath            string `mapstructure:"output_path"`
+	Version               string `mapstructure:"version"`
 }
 
 // Module represents a receiver, exporter, processor or extension for the distribution

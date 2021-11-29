@@ -1,7 +1,7 @@
 dist:
   module: go.opentelemetry.io/collector/builder/test/nocore
   otelcol_version: 0.38.0
-  include_core: false
+  include_test_components: false
 
 receivers:
   - import: go.opentelemetry.io/collector/receiver/otlpreceiver
