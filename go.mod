@@ -3,7 +3,7 @@ module go.opentelemetry.io/collector
 go 1.17
 
 require (
-	contrib.go.opencensus.io/exporter/prometheus v0.4.0
+	contrib.go.opencensus.io/exporter/prometheus v0.4.1
 	github.com/cenkalti/backoff/v4 v4.1.2
 	github.com/gogo/protobuf v1.3.2
 	github.com/golang/snappy v0.0.4
