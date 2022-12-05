@@ -9,7 +9,7 @@ require (
 	go.opentelemetry.io/collector/consumer v0.0.0-20221116212002-2454cfb9ab7f
 	go.opentelemetry.io/collector/pdata v0.64.1
 	go.opentelemetry.io/collector/receiver/otlpreceiver v0.64.1
-	go.uber.org/zap v1.23.0
+	go.uber.org/zap v1.24.0
 	google.golang.org/genproto v0.0.0-20221027153422-115e99e71e1c
 	google.golang.org/grpc v1.50.1
 	google.golang.org/protobuf v1.28.1
