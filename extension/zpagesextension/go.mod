@@ -3,7 +3,7 @@ module go.opentelemetry.io/collector/extension/zpagesextension
 go 1.18
 
 require (
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.2
 	go.opentelemetry.io/collector v0.64.1
 	go.opentelemetry.io/collector/component v0.0.0-20221115212826-19db2f15c85c
 	go.opentelemetry.io/contrib/zpages v0.36.4
