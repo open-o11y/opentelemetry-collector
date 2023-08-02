@@ -13,12 +13,13 @@ require (
 	go.opentelemetry.io/collector/receiver v0.76.1
 	go.opentelemetry.io/collector/receiver/otlpreceiver v0.76.1
 	go.uber.org/zap v1.24.0
-	google.golang.org/genproto v0.0.0-20230110181048-76db0878b65f
-	google.golang.org/grpc v1.54.0
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20230525234030-28d5490b6b19
+	google.golang.org/grpc v1.57.0
 	google.golang.org/protobuf v1.30.0
 )
 
 require (
+	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
