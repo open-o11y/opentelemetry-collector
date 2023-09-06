@@ -25,7 +25,7 @@ jobs:
   prepare-release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       # To keep track of the progress, it might be helpful to create a tracking issue similar to #6067. You are responsible
       # for all of the steps under the "Performed by collector release manager" heading. Once the issue is created, you can
       # create the individual ones by hovering them and clicking the "Convert to issue" button on the right hand side.
