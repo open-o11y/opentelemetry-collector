@@ -1,6 +1,7 @@
 module go.opentelemetry.io/collector/exporter/otlpexporter
 
 go 1.19
+toolchain go1.24.1
 
 require (
 	github.com/stretchr/testify v1.8.2
@@ -12,7 +13,7 @@ require (
 	go.opentelemetry.io/collector/pdata v1.0.0-rcv0011
 	google.golang.org/genproto v0.0.0-20230110181048-76db0878b65f
 	google.golang.org/grpc v1.54.0
-	google.golang.org/protobuf v1.30.0
+	google.golang.org/protobuf v1.36.6
 )
 
 require (
