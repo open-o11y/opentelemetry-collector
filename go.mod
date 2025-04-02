@@ -5,7 +5,7 @@ go 1.19
 require (
 	contrib.go.opencensus.io/exporter/prometheus v0.4.2
 	github.com/fsnotify/fsnotify v1.6.0
-	github.com/golang/snappy v0.0.4
+	github.com/golang/snappy v1.0.0
 	github.com/google/uuid v1.3.0
 	github.com/klauspost/compress v1.16.5
 	github.com/mostynb/go-grpc-compression v1.1.17
