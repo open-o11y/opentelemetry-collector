@@ -26,7 +26,7 @@ jobs:
         env:
           GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/github-script@v6
+      - uses: actions/github-script@v8
         with:
           script: |
             const milestones = await github.rest.issues.listMilestones({
