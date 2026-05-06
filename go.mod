@@ -1,13 +1,13 @@
 module go.opentelemetry.io/collector
 
-go 1.19
+go 1.24
 
 require (
 	contrib.go.opencensus.io/exporter/prometheus v0.4.2
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/golang/snappy v0.0.4
 	github.com/google/uuid v1.3.0
-	github.com/klauspost/compress v1.16.5
+	github.com/klauspost/compress v1.18.6
 	github.com/mostynb/go-grpc-compression v1.1.17
 	github.com/prometheus/client_golang v1.15.0
 	github.com/prometheus/client_model v0.3.0
