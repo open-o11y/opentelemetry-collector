@@ -1,10 +1,10 @@
 module go.opentelemetry.io/collector
 
-go 1.19
+go 1.23
 
 require (
 	contrib.go.opencensus.io/exporter/prometheus v0.4.2
-	github.com/fsnotify/fsnotify v1.6.0
+	github.com/fsnotify/fsnotify v1.10.1
 	github.com/golang/snappy v0.0.4
 	github.com/google/uuid v1.3.0
 	github.com/klauspost/compress v1.16.5
@@ -39,7 +39,7 @@ require (
 	go.uber.org/multierr v1.11.0
 	go.uber.org/zap v1.24.0
 	golang.org/x/net v0.9.0
-	golang.org/x/sys v0.7.0
+	golang.org/x/sys v0.13.0
 	gonum.org/v1/gonum v0.12.0
 	google.golang.org/grpc v1.54.0
 	gopkg.in/yaml.v3 v3.0.1
