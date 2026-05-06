@@ -1,6 +1,6 @@
 module go.opentelemetry.io/collector/receiver/otlpreceiver
 
-go 1.19
+go 1.23
 
 require (
 	github.com/gogo/protobuf v1.3.2
@@ -15,7 +15,7 @@ require (
 	go.uber.org/zap v1.24.0
 	google.golang.org/genproto v0.0.0-20230110181048-76db0878b65f
 	google.golang.org/grpc v1.54.0
-	google.golang.org/protobuf v1.30.0
+	google.golang.org/protobuf v1.36.11
 )
 
 require (
